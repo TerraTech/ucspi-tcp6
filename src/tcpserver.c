@@ -392,11 +392,6 @@ int main(int argc,char **argv)
   sig_catch(sig_term,sigterm);
   sig_ignore(sig_pipe);
 
-  if (gid) if (prot_gid(gid) == -1)
-    logmsg(WHO,111,FATAL,"unable to set gid");
-  if (uid) if (prot_uid(uid) == -1)
-    logmsg(WHO,111,FATAL,"unable to set uid");
-
   /* Name qualification */
 
   if (ip4_scan(hostname,localip)) {
@@ -427,6 +422,11 @@ int main(int argc,char **argv)
   if (socket_listen(s,backlog) == -1)
     logmsg(WHO,111,FATAL,"unable to listen");
   ndelay_off(s);
+
+  if (gid) if (prot_gid(gid) == -1)
+    logmsg(WHO,111,FATAL,"unable to set gid");
+  if (uid) if (prot_uid(uid) == -1)
+    logmsg(WHO,111,FATAL,"unable to set uid");
 
   if (ipv4socket)
     localipstr[ip4_fmt(localipstr,localip + 12)] = 0;

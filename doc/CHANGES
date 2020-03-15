@@ -259,6 +259,9 @@
   Rewrote IPv4 CIDR address evaluation for rules.
   MacOS has already function wait -> waiter (in rblsmtpd).
   ucspi-tcp6-1.10.3
+20190404 (feh)
+	Fixed integration bug in tcpserver changing 'uid' too early (tx. Steve Meier).
+	ucspi-tcp6-1.10.4
 
 ucspi-tcp6 -- version: 1.10 post-beta.
 
