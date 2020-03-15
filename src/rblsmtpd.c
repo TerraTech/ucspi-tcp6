@@ -62,13 +62,14 @@ void ip_init(void)
     if ((ip6_scan(ip_env,remoteip)) == 0) return;
 
     for (j = 15; j >= 0; j--) {
-      hexval = tohex(remoteip[j] & 0x0f);
+      hexval = tohex(remoteip[j] & 15);
       if (!stralloc_catb(&ip_reverse,&hexval,1)) nomem();
       if (!stralloc_cats(&ip_reverse,".")) nomem();
 
-      hexval = tohex(remoteip[j] >> 4 & 0x0f);
+      hexval = tohex(remoteip[j] >> 4 & 15);
       if (!stralloc_catb(&ip_reverse,&hexval,1)) nomem();
       if (!stralloc_cats(&ip_reverse,".")) nomem(); 
+      if (!j) break;
     }
   } 
   else {

@@ -8,7 +8,9 @@ rblsmtpd \- block emails from RBL-listed sites and unwanted sources
 .SH DESCRIPTION
 .B rblsmtpd 
 works with any SMTP server that can run under
-.BR tcpserver (1).
+.B tcpserver
+or
+.BR sslserver
 It accepts a series of getopt-style options
 .I opts
 while
@@ -52,9 +54,11 @@ blocks emails. It uses
 as an error message for the client. Normally
 .B rblsmtpd
 runs under
-.BR tcpserver (1);
-you can use
-.BR tcprules (1)
+.B tcpserver
+or better
+.B sslserver
+and you can use
+.BR tcprules
 to set 
 .B RBLSMTPD 
 for selected clients. 
@@ -70,13 +74,19 @@ If
 is not set,
 .B rblsmtpd
 looks up 
+.I TCP6REMOTEIP/TCPREMOTEIP
+in the RBL and blocks emails if either
+.I TCP6REMOTEIP
+or
 .I TCPREMOTEIP
-in the RBL, and blocks emails if 
-.I TCPREMOTEIP
-is listed.
+is listed here.
 .B tcpserver
-sets up
-.I TCPREMOTEIP 
+and 
+.B sslserver
+set up
+.I TCP6REMOTEIP
+or
+.I TCPREMOTEIP
 as the IP address of the remote host.
 .TP
 .B \-r \fIbase
@@ -87,7 +97,7 @@ as an RBL source. An IPv4 address
 is listed by that source if
 .I d.c.b.a.base
 has a TXT record.
-An IPv6 address is expanded in it's inverse nibble format.
+An IPv6 address is expanded in its inverse nibble format.
 .B rblsmtpd
 uses the contents of the TXT record as an error message for the client.
 .TP
@@ -110,13 +120,18 @@ and
 options.
 .B rblsmtpd
 tries each source in turn until it finds one that lists or anti-lists 
-.IR TCPREMOTEIP . 
+according to 
+.I TCP6REMOTEIP
+or
+.IR TCPREMOTEIP .
 
 If you want to run your own RBL source or anti-RBL source for
 .BR rblsmtpd ,
 you can use
 .B rbldns
-from the DNScache (djbdns) package.
+from the 
+.I djbdnscurve6 
+package.
 .SH "SMTP REPLIES"
 Normally, if 
 .B RBLSMTPD 
@@ -182,12 +197,11 @@ and potentially delay the call to
 .SH "IPv4/IPv6 INVERSE NIBBLE FORMAT"
 .B
 rblsmtpd 
-constructs from the incoming IP address \fITCPREMOTEIP\fR
-by means of it's inverse nibble format the resulting
-inverse domain name. If \fIPROTO\fR=\fBTCP\fR
-the standard inverse IPv4 address scheme is used, whereas
-in case of \fIPROTO\fR=\fBTCP6\fR the IPv6 inverse domain name
-is computed based on the expanded IPv6 address:
+constructs from the provided IP address 
+.I TCP6REMOTEIP/TCPREMOTEIP
+the respective inverse nibble format concatenated with the
+.I base
+name and thus constructing the inverse domain name. Here is a sample for IPv6:
 .IP
 fe80::1 =>  
 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.e.f.(base)
@@ -198,7 +212,8 @@ and strips the IPv6 prefix
 piror to build the IPv4 inverse address
 for the RBL lookup.
 .SH "SEE ALSO"
+sslserver(1),
 tcpserver(1),
 tcprules(1),
 tcprulescheck(1),
-tcp-environ(5)
+tcp-environ(5).
