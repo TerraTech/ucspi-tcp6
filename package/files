@@ -3,7 +3,7 @@ conf-ld
 conf-home
 conf-man
 conf-qlibs
-README
+README.md
 doc
 doc/CHANGES
 doc/HISTORY

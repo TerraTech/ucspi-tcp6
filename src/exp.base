@@ -15,7 +15,7 @@ tcpclient: drop: (-99) unable to connected to: ::1 port: 16
 tcpclient: fatal: (111) no IP address for: nonexistent.local.
 111
 --- tcpclient prints error message with unresolvable host name
-tcpclient: fatal: (111) no IP address for: thislabelistoolongbecausednshasalimitof63charactersinasinglelabel.
+tcpclient: fatal: (111) unable to figure out IP address for: thislabelistoolongbecausednshasalimitof63charactersinasinglelabel.
 111
 --- tcpserver prints usage message without enough arguments
 tcpserver: usage: tcpserver [ -46UxXpPhHrRoOdDqQv ] [ -c limit ] [ -x rules.cdb ] [ -B banner ] [ -g gid ] [ -u uid ] [ -b backlog ] [ -l localname ] [ -t timeout ] [ -I interface ] host port program
@@ -27,7 +27,7 @@ tcpserver: fatal: (111) unable to figure out port number for: nonexistentport
 tcpserver: fatal: (111) temporarily unable to figure out IP address for: nonexistent.local.
 111
 --- tcpserver prints error message with unresolvable host name
-tcpserver: fatal: (111) no IP address for: thislabelistoolongbecausednshasalimitof63charactersinasinglelabel.
+tcpserver: fatal: (111) temporarily unable to figure out IP address for: thislabelistoolongbecausednshasalimitof63charactersinasinglelabel.
 111
 --- tcpserver prints error message with non-local host name
 tcpserver: fatal: (111) unable to bind
@@ -82,7 +82,7 @@ PROTO=TCP6
 TCPLOCALHOST=Local
 TCPLOCALIP=::1
 TCPLOCALPORT=50020
-TCPREMOTEHOST=ipv6-loopback
+TCPREMOTEHOST=unset
 TCPREMOTEIP=::1
 TCPREMOTEPORT=50016
 TCPREMOTEINFO=unset
@@ -143,180 +143,231 @@ tcprules: syntax: invalid prefix length on line: 2002/64:deny
 --- tcprules creates a cdb file
 0
 --- tcprulescheck sees deny -- and converts bit length
+tcprulescheck: info: TCPREMOTEIP: 2002::1 TCPREMOTEHOST: 
 rule 2002::/64:
 deny connection
 0
 --- tcprulescheck does not apply deny to another host
+tcprulescheck: info: TCPREMOTEIP: 2001::1 TCPREMOTEHOST: 
 default:
 allow connection
 0
 --- tcprules replaces a cdb file
 0
 --- tcprulescheck finds rule with address and info
+tcprulescheck: info: TCPREMOTEIP: 127.0.0.1 TCPREMOTEHOST: 
 rule joe@127.0.0.1:
 set environment variable which=first
 allow connection
 0
 --- tcprulescheck finds rule with address
+tcprulescheck: info: TCPREMOTEIP: 18.23.0.32 TCPREMOTEHOST: 
 rule 18.23.0.32:
 set environment variable which=second
 allow connection
 0
 --- tcprulescheck finds one-dot wildcard
+tcprulescheck: info: TCPREMOTEIP: 127.0.0.1 TCPREMOTEHOST: 
 rule 127.:
 set environment variable which=ipv4-looback net Class A
 allow connection
 0
 --- tcprulescheck finds zero-dot wildcard
+tcprulescheck: info: TCPREMOTEIP: 10.119.75.39 TCPREMOTEHOST: 
 default:
 set environment variable which=fourth
 allow connection
 0
 --- tcprules handles comments, address ranges, multiple variables, and commas in here
 0
+tcprulescheck: info: TCPREMOTEIP: 127.0.0.1 TCPREMOTEHOST: 
 rule 127.0.:
 set environment variable which=first
 set environment variable where=whatever
 set environment variable who=,comma.
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 127.1.0.1 TCPREMOTEHOST: 
 rule 127.1.:
 set environment variable which=first
 set environment variable where=whatever
 set environment variable who=,comma.
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 127.2.0.1 TCPREMOTEHOST: 
 rule 127.2.:
 set environment variable which=first
 set environment variable where=whatever
 set environment variable who=,comma.
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 127.3.0.1 TCPREMOTEHOST: 
 rule 127.3.:
 set environment variable which=first
 set environment variable where=whatever
 set environment variable who=,comma.
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 127.4.0.1 TCPREMOTEHOST: 
 rule 127.4.:
 set environment variable which=first
 set environment variable where=whatever
 set environment variable who=,comma.
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 127.5.0.1 TCPREMOTEHOST: 
 rule 127.5.:
 set environment variable which=first
 set environment variable where=whatever
 set environment variable who=,comma.
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 127.6.0.1 TCPREMOTEHOST: 
 default:
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 127.7.0.1 TCPREMOTEHOST: 
 default:
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 127.8.0.1 TCPREMOTEHOST: 
 default:
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 127.9.0.1 TCPREMOTEHOST: 
 default:
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 127.10.0.1 TCPREMOTEHOST: 
 default:
 allow connection
 --- tcprules handles IPv4 and IPv6 CIDR addresses
 0
+tcprulescheck: info: TCPREMOTEIP: 127.1.2.3 TCPREMOTEHOST: 
 rule 127./8:
 set environment variable which=IP4 CIDR
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 2001::1 TCPREMOTEHOST: 
 rule 2001::/64:
 set environment variable which=IPv6 CIDR
 allow connection
 --- tcprules handles host names
 0
+tcprulescheck: info: TCPREMOTEIP: 1.2.3.4 TCPREMOTEHOST: known.edu TCPREMOTEINFO: 
 rule =known.edu:
 set environment variable which=known
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 1.2.3.4 TCPREMOTEHOST: random.edu TCPREMOTEINFO: 
 default:
 set environment variable which=anybody
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 1.2.3.4 TCPREMOTEHOST: abuser.edu TCPREMOTEINFO: 
 default:
 set environment variable which=anybody
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 1.2.3.4 TCPREMOTEHOST: x.abuser.edu TCPREMOTEINFO: 
 rule =.abuser.edu:
 deny connection
+tcprulescheck: info: TCPREMOTEIP: 1.2.3.4 TCPREMOTEHOST: x.y.abuser.edu TCPREMOTEINFO: 
 rule =.abuser.edu:
 deny connection
 --- tcprulescheck searches for rules in the proper order
 0
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.9 TCPREMOTEHOST: one.two.three TCPREMOTEINFO: xyz
 rule xyz@86.75.30.9:
 set environment variable which=first
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.9 TCPREMOTEHOST: 
 rule xyz@86.75.30.9:
 set environment variable which=first
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.10 TCPREMOTEHOST: one.two.three TCPREMOTEINFO: xyz
 rule xyz@=one.two.three:
 set environment variable which=second
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.9 TCPREMOTEHOST: one.two.three TCPREMOTEINFO: abc
 rule 86.75.30.9:
 set environment variable which=third
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.9 TCPREMOTEHOST: 
 rule 86.75.30.9:
 set environment variable which=third
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.9 TCPREMOTEHOST: one.two.three TCPREMOTEINFO: 
 rule 86.75.30.9:
 set environment variable which=third
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.9 TCPREMOTEHOST: 
 rule 86.75.30.9:
 set environment variable which=third
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.10 TCPREMOTEHOST: one.two.three TCPREMOTEINFO: abc
 rule =one.two.three:
 set environment variable which=fourth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.10 TCPREMOTEHOST: one.two.three TCPREMOTEINFO: 
 rule =one.two.three:
 set environment variable which=fourth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.10 TCPREMOTEHOST: four.two.three TCPREMOTEINFO: 
 rule 86.75.30.:
 set environment variable which=fifth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.30.10 TCPREMOTEHOST: 
 rule 86.75.30.:
 set environment variable which=fifth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.20.10 TCPREMOTEHOST: four.two.three TCPREMOTEINFO: abc
 rule 86.75.:
 set environment variable which=sixth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.20.10 TCPREMOTEHOST: 
 rule 86.75.:
 set environment variable which=sixth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.20.10 TCPREMOTEHOST: four.two.three TCPREMOTEINFO: 
 rule 86.75.:
 set environment variable which=sixth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.75.20.10 TCPREMOTEHOST: 
 rule 86.75.:
 set environment variable which=sixth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.85.20.10 TCPREMOTEHOST: four.two.three TCPREMOTEINFO: abc
 rule 86.:
 set environment variable which=seventh
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.85.20.10 TCPREMOTEHOST: 
 rule 86.:
 set environment variable which=seventh
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.85.20.10 TCPREMOTEHOST: four.two.three TCPREMOTEINFO: 
 rule 86.:
 set environment variable which=seventh
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 86.85.20.10 TCPREMOTEHOST: 
 rule 86.:
 set environment variable which=seventh
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 96.85.20.10 TCPREMOTEHOST: four.two.three TCPREMOTEINFO: abc
 rule =.two.three:
 set environment variable which=eighth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 96.85.20.10 TCPREMOTEHOST: four.two.three TCPREMOTEINFO: 
 rule =.two.three:
 set environment variable which=eighth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 96.85.20.10 TCPREMOTEHOST: four.three TCPREMOTEINFO: abc
 rule =.three:
 set environment variable which=ninth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 96.85.20.10 TCPREMOTEHOST: four.three TCPREMOTEINFO: 
 rule =.three:
 set environment variable which=ninth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 96.85.20.10 TCPREMOTEHOST: four TCPREMOTEINFO: abc
 rule =:
 set environment variable which=tenth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 96.85.20.10 TCPREMOTEHOST: four TCPREMOTEINFO: 
 rule =:
 set environment variable which=tenth
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 96.85.20.10 TCPREMOTEHOST: 
 default:
 set environment variable which=eleventh
 allow connection
+tcprulescheck: info: TCPREMOTEIP: 96.85.20.10 TCPREMOTEHOST: 
 default:
 set environment variable which=eleventh
 allow connection
@@ -428,7 +479,7 @@ ok
 --- rblsmtpd understands -a
 ok
 0
-20666
+3834
 ---> tcpserver's log output
 ++++
 --- tcpserver -1v prints proper messages
@@ -447,8 +498,8 @@ tcpserver: status: 0/2
 tcpserver: status: 1/2
 tcpserver: pid x from ::x
 tcpserver: ok x Local:::1:x ipv6-loopback:::1::x
-tcpserver: status: 2/2
 tcpserver: end x status 13
+tcpserver: status: 0/2
 tcpserver: status: 1/2
 tcpserver: pid x from ::x
 tcpserver: ok x Local:::1:x ipv6-loopback:::1::x

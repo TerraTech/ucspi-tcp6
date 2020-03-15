@@ -13,9 +13,9 @@ or
 and
 .B sslserver
 optionally follow rules to decide whether a TCP connection is acceptable. 
-A 'rule' typially consists of the tokens 'address', 'instruction', and 'expression' 
+A 'rule' consists of the tokens 'address', 'instruction', and 'expression' 
 telling for which 'address' a 'instruction' is provided following a set of 
-expressions, providing some environment variables. The 'address' token 
+optional expressions, providing some environment variables. The 'address' token 
 can be given as IPv4/IPv6 address in CIDR format, or 
 - if prepended with a equal sign (=) - a hostname/FQDN, to be subject of 
 DNS qualification.
@@ -32,7 +32,7 @@ For example, the rule
 18.23.0.32:deny
 .P
 prohibits connections from IP address 18.23.0.32.
-Ranges of IPv4 addresses can defined in a \fIclass-dependend\fR manner
+Ranges of IPv4 addresses can be defined in a \fIclass-dependend\fR manner
 .IP
 18.:deny
 .P 
@@ -40,7 +40,7 @@ or by means of a range of contiguous addresses
 .IP
 18.23.0.1-22:ins
 .P
-Rather a CIDR notation can be used instead. The rule
+or by using a CIDR notation. The rule
 .IP
 127./8:allow
 .P
@@ -64,12 +64,11 @@ can be used to block an entire IPv6 (sub-)net
 in case the net-prefix (here: \fI/48\fR) is provided.
 
 \fINote\fR: Since the IPv6 address on input is evaluated
-in it's compactified format, simply include the final '::'
+in its compactified format, simply include the final '::'
 for convenience. The resulting address is truncated 
-to the number of provided prefix bits. 
-.SH "IPv6 MAPPED IPv4 ADDRESSES"
+to the specified number of prefix bits. 
 .B tcprules
-does currently not understand IPv6 mapped IPv4 addresses
+currently does not understand IPv6 mapped IPv4 addresses
 .IP
 ::ffff:a.b.c.d
 .P
@@ -77,7 +76,9 @@ where
 .IP
 a.b.c.d
 .P 
-is the mapped IPv4 addresses.
+is the IPv4 addresses.
+In consequence, an IPv4 address will not match a rule for the
+corresponding IPv6-mapped address, and vice versa.
 .SH USAGE
 .B tcprules
 reads rules from it's standard input and writes them into
@@ -126,8 +127,8 @@ format is portable across machines.
 A rule is one line. A file containing rules may also contain comments: lines
 beginning with # are ignored. 
 
-Each rule contains an address, a question mark, an instruction, and optionally 
-a list of expressions, with no extra spaces. When
+Each rule contains an address, a colon, an instruction, and optionally 
+a comma-separated list of expressions, with no extra spaces. When
 .BR tcpserver 
 receives a connection from that address, it follows the instruction and evaluates the expressions.
 .SH "ADDRESS TOKENS"
@@ -177,15 +178,15 @@ will follow the third instruction.
 
 If $TCPREMOTEIP is 18.23.0.32,
 .B tcpserver
-will follow the second instructions. 
+will follow the second instruction. 
 
 If $TCPREMOTEIP is 127.0.0.1 and $TCPREMOTEINFO is bill,
 .B tcpserver 
-will follow the fourth instructions. 
+will follow the fourth instruction. 
 
 If $TCPREMOTEIP is 127.0.0.1 and $TCPREMOTEINFO is joe,
 .B tcpserver 
-will follow the first instructions. 
+will follow the first instruction. 
 
 You can use
 .B tcprulescheck
@@ -194,7 +195,7 @@ to see how
 will interpret rules in
 .IR cdb .
 .SH INSTRUCTIONS
-The instructions in a rule must begin with either 
+The instructions in a rule must be either 
 .I allow 
 or
 .IR deny . 
@@ -209,7 +210,7 @@ tells
 .B tcpserver 
 to drop all connections that aren't handled by more specific rules. 
 
-The instructions may continue with further expressions used as environment variables, in the form
+The rule may continue with further expressions used as environment variables, in the form
 .IR var="x" .
 .B tcpserver
 and

@@ -137,8 +137,9 @@ void doit(int t)
 {
   uint32 netif;
   int j;
-
-  ipv4socket = ip6_isv4mapped(remoteip);
+ 
+  if (!ipv4socket) 
+    ipv4socket = ip6_isv4mapped(remoteip);
 
   if (socket_local(t,localip,&localport,&netif) == -1)
     logmsg(WHO,111,FATAL,"unable to get local address");
@@ -157,7 +158,7 @@ void doit(int t)
 
   if (verbosity >= 2) {
     strnum[fmt_ulong(strnum,getpid())] = 0;
-    log(WHO,B("pid ",strnum," from ",remoteipstr));
+    log_who(WHO,B("pid ",strnum," from ",remoteipstr));
   }
 
   if (*banner) {
@@ -167,7 +168,7 @@ void doit(int t)
   }
 
   if (!localhost)
-    if (dns_name(&localhostsa,localip) != -1)
+    if (dns_name(&localhostsa,localip) >= 0) 
       if (localhostsa.len) {
         if (!stralloc_0(&localhostsa)) drop_nomem();
         localhost = localhostsa.s;
@@ -176,21 +177,21 @@ void doit(int t)
   remoteportstr[fmt_ulong(remoteportstr,remoteport)] = 0;
 
   if (flagremotehost)
-    if (dns_name(&remotehostsa,remoteip) != -1)
+    if (dns_name(&remotehostsa,remoteip) >= 0)
       if (remotehostsa.len) {
         if (flagparanoid) {
-          if (dns_ip6(&tmp,&remotehostsa) != -1)
+          if (dns_ip6(&tmp,&remotehostsa) >= 0)
             for (j = 0; j + 16 <= tmp.len; j += 16)
               if (byte_equal(remoteip,16,tmp.s + j)) {
                 flagparanoid = 0;
                 break;
               }
-            if (dns_ip4(&tmp,&remotehostsa) != -1)
-              for (j = 0; j + 4 <= tmp.len; j += 4)
-                if (byte_equal(remoteip,4,tmp.s + j)) {
-                  flagparanoid = 0;
-                  break;
-                }
+          if (dns_ip4(&tmp,&remotehostsa) >= 0)
+            for (j = 0; j + 4 <= tmp.len; j += 4)
+              if (byte_equal(remoteip,4,tmp.s + j)) {
+                flagparanoid = 0;
+                break;
+              }
         }
         if (!flagparanoid) {
           if (!stralloc_0(&remotehostsa)) drop_nomem();
@@ -292,7 +293,7 @@ void printstatus(void)
   if (verbosity < 2) return;
   strnum[fmt_ulong(strnum,numchildren)] = 0;
   strnum2[fmt_ulong(strnum2,limit)] = 0;
-  log(WHO,B("status: ",strnum,"/",strnum2));
+  log_who(WHO,B("status: ",strnum,"/",strnum2));
 }
 
 void sigterm(void)
@@ -309,9 +310,10 @@ void sigchld(void)
     if (verbosity >= 2) {
       strnum[fmt_ulong(strnum,pid)] = 0;
       strnum2[fmt_ulong(strnum2,wstat)] = 0;
-      log(WHO,B("end ",strnum," status ",strnum2));
+      log_who(WHO,B("end ",strnum," status ",strnum2));
     }
-    if (numchildren) --numchildren; printstatus();
+    if (numchildren) --numchildren; 
+    printstatus();
   }
 }
 
@@ -392,21 +394,21 @@ int main(int argc,char **argv)
 
   /* Name qualification */
 
-  if (ip4_scan(hostname,localip)) {
+  if (ip4_scan(hostname,localip + 12)) {
     if (!stralloc_copys(&addresses,"")) drop_nomem();
     byte_copy(addresses.s,12,V4mappedprefix);
-    byte_copy(addresses.s + 12,4,localip);
+    byte_copy(addresses.s + 12,4,localip + 12);
+    ipv4socket = 1;
   } else if (ip6_scan(hostname,localip))
-    if (!stralloc_copyb(&addresses,localip,16)) drop_nomem();
+      if (!stralloc_copyb(&addresses,localip,16)) drop_nomem();
 
   if (!addresses.len) {
     if (!stralloc_copys(&tmp,hostname)) drop_nomem();
-    if (!dns_ip6_qualify(&addresses,&fqdn,&tmp))
+    if (dns_ip6_qualify(&addresses,&fqdn,&tmp) < 0)
       logmsg(WHO,111,FATAL,B("temporarily unable to figure out IP address for: ",(char *)hostname));
-    if (addresses.len < 16)
-      logmsg(WHO,111,FATAL,B("no IP address for: ",(char *)hostname));
   }
-  byte_copy(localip,16,addresses.s);
+  if (addresses.len < 16)
+    logmsg(WHO,111,FATAL,B("no IP address for: ",(char *)hostname));
 
   s = socket_tcp();
   if (s == -1)

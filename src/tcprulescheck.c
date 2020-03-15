@@ -55,9 +55,9 @@ int main(int argc, char **argv)
 {
   char *fnrules;
   int fd;
-  char *ip;
-  char *info;
-  char *host;
+  char *ip = 0;
+  char *info = 0;
+  char *host = 0;
 
   fnrules = argv[1];
   if (!fnrules) {
@@ -68,6 +68,8 @@ int main(int argc, char **argv)
   if (!ip) ip = "0"; 
   info = env_get("TCPREMOTEINFO");
   host = env_get("TCPREMOTEHOST");
+
+  logmsg(WHO,0,INFO,B("TCPREMOTEIP: ",ip," TCPREMOTEHOST: ",host," TCPREMOTEINFO: ",info));
 
   fd = open_read(fnrules);
   if ((fd == -1) || (rules(found,fd,ip,host,info) == -1))

@@ -1,7 +1,7 @@
 #include "buffer.h"
 #include "exit.h"
 
-char bspace[256];
+char bspace[BUFFER_SMALL];
 buffer b = BUFFER_INIT(write,1,bspace,sizeof(bspace));
 
 void puts(char *s)

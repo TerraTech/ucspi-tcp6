@@ -133,22 +133,21 @@ int main(int argc,char **argv)
 
   if (!*++argv) usage();
 
-
-  if (ipv4socket) {
-     if (ip4_scan(hostname,ipremote)) {
-       if (!stralloc_copyb(&addresses,(char *)V4mappedprefix,12)) nomem();
-       byte_copy(addresses.s + 12,4,ipremote);
-     }
+  if (ip4_scan(hostname,ipremote + 12)) {
+    if (!stralloc_copys(&addresses,"")) nomem();
+    byte_copy(addresses.s,12,V4mappedprefix);
+    byte_copy(addresses.s + 12,4,ipremote + 12);
+    ipv4socket = 1;
   } else if (ip6_scan(hostname,ipremote))
-     if (!stralloc_copyb(&addresses,ipremote,16)) nomem();
+      if (!stralloc_copyb(&addresses,ipremote,16)) nomem();
 
   if (!addresses.len) {
     if (!stralloc_copys(&tmp,hostname)) nomem();
-     if (dns_ip6_qualify(&addresses,&fqdn,&tmp) == -1)
-       logmsg(WHO,111,FATAL,B("unable to figure out IP address for: ",(char *)hostname));
+    if (dns_ip6_qualify(&addresses,&fqdn,&tmp) < 0)
+      logmsg(WHO,111,FATAL,B("unable to figure out IP address for: ",(char *)hostname));
   }
   if (addresses.len < 16) 
-       logmsg(WHO,111,FATAL,B("no IP address for: ",(char *)hostname));
+    logmsg(WHO,111,FATAL,B("no IP address for: ",(char *)hostname));
 
   if (addresses.len == 16) {
      ctimeout[0] += ctimeout[1];
@@ -211,7 +210,7 @@ int main(int argc,char **argv)
 
   x = forcelocal;
   if (!x)
-    if (dns_name6(&tmp,iplocal) != -1) {
+    if (dns_name6(&tmp,iplocal) < 0) {
       if (!stralloc_0(&tmp)) nomem();
       x = tmp.s;
     }
@@ -232,11 +231,11 @@ int main(int argc,char **argv)
   if (!pathexec_env("TCPREMOTEIP",ipstr)) nomem();
 
   if (verbosity >= 2)
-    log(WHO,B("connected to ",ipstr," port ",strnum));
+    log_who(WHO,B("connected to ",ipstr," port ",strnum));
 
   x = 0;
   if (flagremotehost)
-    if (dns_name6(&tmp,ipremote) != -1) {
+    if (dns_name6(&tmp,ipremote) < 0) {
       if (!stralloc_0(&tmp)) nomem();
       x = tmp.s;
     }
@@ -258,4 +257,6 @@ int main(int argc,char **argv)
 
   pathexec(argv);
   logmsg(WHO,111,FATAL,B("unable to run: ",*argv));
+
+  return 111;
 }

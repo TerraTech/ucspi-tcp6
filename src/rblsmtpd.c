@@ -31,8 +31,7 @@ void usage(void)
 [-W] [-w delay] smtpd [ arg ... ]");
 }
 
-char *tcp_proto;
-char *ip_env;
+char *ip_env = 0;;
 static stralloc ip_reverse;
 int flagip6;
 
@@ -42,24 +41,19 @@ void ip_init(void)
   unsigned int j;
   char hexval;
   char remoteip[16];
-
+ 
   flagip6 = 0;
   byte_zero(remoteip,16);
 
-  tcp_proto = env_get("PROTO");
-  if (!tcp_proto) tcp_proto = "";
-  if (!str_diff(tcp_proto,"TCP6")) {
-    ip_env = env_get("TCP6REMOTEIP");
-    if (!ip_env) ip_env="::";
+  ip_env = env_get("TCP6REMOTEIP");
+  if (ip_env) { 
     if (byte_equal(ip_env,7,V4MAPPREFIX)) 
       ip_env = ip_env + 7;
-    else
+    else 
       flagip6 = 1;
   } else {
     ip_env  = env_get("TCPREMOTEIP");
-    if (!ip_env) ip_env="0.0.0.0";
-    if (byte_equal(ip_env,7,V4MAPPREFIX)) 
-      ip_env = ip_env + 7;
+    if (!ip_env) ip_env = "";
   }
 
   if (!stralloc_copys(&ip_reverse,"")) nomem();
@@ -106,7 +100,7 @@ void rbl(char *base)
   if (decision) return;
   if (!stralloc_copy(&tmp,&ip_reverse)) nomem();
   if (!stralloc_cats(&tmp,base)) nomem();
-  if (dns_txt(&text,&tmp) == -1) {
+  if (dns_txt(&text,&tmp) < 0) {
     flagmustnotbounce = 1;
     if (flagfailclosed) {
       if (!stralloc_copys(&text,"temporary RBL lookup error")) nomem();
@@ -135,7 +129,7 @@ void antirbl(char *base)
   else
     flagip = dns_ip4(&text,&tmp);
  
-  if (flagip == -1) {
+  if (flagip < 0) {
     flagmustnotbounce = 1;
     if (!flagfailclosed)
       decision = 1;
@@ -146,11 +140,13 @@ void antirbl(char *base)
 }
 
 char strnum[FMT_ULONG];
-static stralloc message;
-static stralloc info;
+static stralloc message = {0};;
+static stralloc info = {0};
 
-char inspace[64]; buffer in = BUFFER_INIT(read,0,inspace,sizeof(inspace));
-char outspace[1]; buffer out = BUFFER_INIT(write,1,outspace,sizeof(outspace));
+char inspace[64]; 
+buffer in = BUFFER_INIT(read,0,inspace,sizeof(inspace));
+char outspace[1]; 
+buffer out = BUFFER_INIT(write,1,outspace,sizeof(outspace));
 
 void waitdelay(unsigned long delay)
 {
@@ -309,7 +305,6 @@ int main(int argc,char **argv,char **envp)
     rblinfo(); 
   else if (decision >= 2)
     rblsmtpd();
-
 
   pathexec(argv);
   logmsg(WHO,111,FATAL,B("unable to run: ",*argv));

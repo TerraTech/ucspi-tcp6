@@ -114,10 +114,9 @@ void doit(int fdleft,int fdright)
       for (i = 0;i < r;++i) {
         ch = prebuf[i];
         if (ch == '\n')
-        if (!rightflagcr)
-          rightbuf[rightlen++] = '\r';
-          rightbuf[rightlen++] = ch;
-          rightflagcr = (ch == '\r');
+        if (!rightflagcr) rightbuf[rightlen++] = '\r';
+        rightbuf[rightlen++] = ch;
+        rightflagcr = (ch == '\r');
       }
     }
 
@@ -165,4 +164,6 @@ int main(int argc,char **argv,char **envp)
 
   pathexec_run(argv[1],argv + 1,envp);
   logmsg(WHO,111,FATAL,B("unable to run: ",argv[1]));
+  
+  return 111;
 }

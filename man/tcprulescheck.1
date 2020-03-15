@@ -7,13 +7,20 @@ tcprulescheck \- checks tcprules
 .SH DESCRIPTION
 .B tcprulescheck
 says what
-.BR tcpserver (1)
+.BR tcpserver 
 will do with a connection from IP address $TCPREMOTEIP with host name
 $TCPREMOTEHOST and remote connection information $TCPREMOTEINFO, following
 the rules compiled into
 .I cdb
 by
-.BR tcprules (1).
+.BR tcprules .
+Upon invocation 
+.B tcprulescheck
+shows the given parameters upon call 
+.IR TCPREMEOTEIP ,
+.I TCPREMTEOINFO 
+and if the later is defined
+.I TCPREMTOEHOST .
 .SH SEE ALSO
 tcpserver(1),
 tcprules(1),

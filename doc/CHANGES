@@ -278,6 +278,25 @@
 	package/rts usage explained (README.rts) and finally straightend.
 	tcprules and tcprulescheck improved for IPv4/IPv6 CIDR address reporting.
 	ucspi-tcp6-1.10.7
+20190818 (feh)
+	Added compatibility with fehQlibs-13.
+	Fixed incorrect behavior for given IPv4 address als hostname for tcpserver
+	and tcpclient.
+	Added tcprulescheck verbose info message.
+	ucspi-tcp6-1.10.8
+20190818 (feh)
+	Relabled ucspi-tcp6-1.10.8 as ucspi-tcp6-1.11.0 to be used for s/qmail with fehQlibs.
+20190912 (feh)
+	ucspi-tcp6 requires now fehQlibs-13.
+	ucspi-tcp6-1.11.0
+20191228 (feh)
+	tcpserver and tcpclient set ipv4socket = 1 upon call with IPv4 address on input
+	to improve compatibility with NetBSD/MacOS.
+	ucspi-tcp6-1.11.1
+20200213 (feh)
+	Improved stability of rblsmtpd (which might segfault on IPv6 connections).
+	ucspi-tcp6-1.11.2
+	
 
-ucspi-tcp6 -- version: 1.10. (heritage)
+ucspi-tcp6 -- version: 1.11. (final)
 
