@@ -1,0 +1,362 @@
+.TH tcpserver 1
+.SH NAME
+tcpserver \- accept incoming TCP connections
+.SH SYNOPSIS
+.B tcpserver
+[
+.B \-146jpPhHrRoOdDqQv
+]
+[
+.B \-c\fIlimit
+]
+[
+.B \-X\-x\fIrules.cdb
+]
+[
+.B \-B\fIbanner
+]
+[
+.B \-g\fIgid
+]
+[
+.B \-u\fIuid
+]
+[
+.B \-b\fIbacklog
+]
+[
+.B \-l\fIlocalname
+]
+[
+.B \-t\fItimeout
+]
+[
+.B \-I\fIifname
+]
+.I host
+.I port
+.I program
+[
+.I arg ...
+]
+.SH DESCRIPTION
+.B tcpserver
+waits for connections from TCP clients.
+For each connection, it runs
+.I program
+with the given arguments,
+with descriptor 0 reading from the network
+and descriptor 1 writing to the network.
+
+.SH BINDINGS
+.B tcpserver
+will attach to the primary IP address of
+.I host
+while the host name is fed through qualification using
+.IR dns_ip6_qualify .
+If
+.I host
+is given as dotted decimal IPv4 or compactified IPv6
+address,
+.B tcpserver
+will bind uniquely to those.  In order to bind
+.B tcpserver
+to a LLU IPv6 address (ie. fe80::a:b:c) additionally the interface name
+.B \-I\fIifname
+has to be provided.
+
+\fINote\fR: The kernel might use temporary changing SLAAC addresses.
+
+.B tcpserver
+can be instructed to be multi-homing capable while binding
+to all available IP addresses. Now
+.I host
+is given as '0' or '::' perhaps accompanied by the flags
+.I -4
+or
+.IR -6 .
+
+Further,
+.B tcpserver
+may be forced to provide dual-stack capabilities, thus allowing
+IPv4 and IPv6 clients to attach to the same instance once
+.I host
+equals ':0' as pseudo IP address.
+
+.I port
+may be a numeric port number
+or a port name.  If
+.I port
+is 0,
+.B tcpserver
+will choose a free port.
+
+.B tcpserver
+sets up several environment variables,
+as described in
+.B tcp-environ(5).
+
+.B tcpserver
+exits when it receives SIGTERM.
+.SH "OPTIONS"
+.TP
+.B \-1
+After preparing to receive connections,
+print the local ip address and port number to standard output.
+.TP
+.B \-4
+Use IPv4 sockets.  
+.TP
+.B \-6
+Force IPv6 mode. This will set \fIPROTO\fR to \fBTCP6\fR and put
+IPv4-mapped IPv6 addresses in \fITCPLOCALIP\fR and \fITCPREMOTEIP\fR.
+.TP
+.B \-c\fIlimit
+Do not handle more than
+.I limit
+simultaneous connections.
+If there are
+.I limit
+simultaneous copies of
+.I program
+running, defer acceptance of a new connection
+until one copy finishes.
+.I limit
+must be a positive integer.
+Default: 40.
+.TP
+.B \-x\fIrules.cdb
+Follow the rules compiled into
+.I rules.cdb
+by
+.BR tcprules .
+These rules may specify setting environment variables
+or rejecting connections from bad sources.
+
+.B tcpserver
+does not read
+.I rules.cdb
+into memory;
+you can rerun
+.B tcprules
+to change
+.BR tcpserver 's
+behavior on the fly.
+.TP 
+.B \-X
+continue processing, even if 
+.I rules.cdb
+is not readable.
+.TP
+.B \-B\fIbanner
+Write
+.I banner
+to the network immediately after each connection is made.
+.B tcpserver
+writes
+.I banner
+before looking up
+.IR TCPREMOTEHOST ,
+before looking up
+.IR TCPREMOTEINFO ,
+and before checking
+.IR rules.cdb .
+
+This feature can be used to reduce latency in protocols
+where the client waits for a greeting from the server.
+.TP
+.B \-g\fIgid
+Switch group ID to
+.I gid
+after preparing to receive connections.
+.I gid
+must be a positive integer.
+.TP
+.B \-u\fIuid
+Switch user ID to 
+.I uid
+after preparing to receive connections.
+.I uid
+must be a positive integer.
+.TP
+.B \-I\fIifname
+Bind to the network interface
+.I ifname
+("eth0" on Linux, for example).  This is only defined and needed for
+IPv6 link-local addresses.
+.TP
+.B \-b\fIbacklog
+Allow up to
+.I backlog
+simultaneous SYN_RECEIVEDs.
+Default: 20.
+On some systems,
+.I backlog
+is silently limited to 5.
+See
+.BR listen (2)
+for more details.
+.TP
+.B \-o
+Leave IP options alone.
+If the client is sending packets along an IP source route,
+send packets back along the same route.
+.TP
+.B \-O
+(Default.)
+Kill IP options.
+A client can still use IPv4/IPv6 source routing to connect and to send data,
+but packets will be sent back along the default route.
+.TP
+.B \-d
+(Default.)
+Delay sending data for a fraction of a second whenever the
+remote host is responding slowly,
+to make better use of the network.
+.TP
+.B \-D
+Never delay sending data;
+enable TCP_NODELAY.
+This is appropriate for interactive connections.
+.TP
+.B \-q
+Quiet.
+Do not print any messages.
+.TP
+.B \-Q
+(Default.)
+Print error messages.
+.TP
+.B \-v
+Verbose.
+Print all available messages. 
+.SH "DATA-GATHERING OPTIONS"
+.TP
+.B \-p
+Paranoid.
+After looking up the remote host name,
+look up the IP addresses for that name,
+and make sure one of them matches
+.IR TCPREMOTEIP .
+If none of them do,
+unset
+.IR TCPREMOTEHOST .
+.TP
+.B \-P
+(Default.)
+Not paranoid.
+.TP
+.B \-h
+(Default.)
+Look up the remote host name and set
+.IR TCPREMOTEHOST .
+.TP
+.B \-H
+Do not look up the remote host name.
+.TP
+.B \-l\fIlocalname
+Do not look up the local host name;
+use
+.I localname
+for
+.IR TCPLOCALHOST .
+.TP
+.B \-r
+Attempt to obtain
+.I TCPREMOTEINFO
+from the remote host.
+.TP
+.B \-R
+(Default.)
+Do not attempt to obtain
+.I TCPREMOTEINFO
+from the remote host.
+.TP
+.B \-t\fItimeout
+Give up on the 
+.I TCPREMOTEINFO
+connection attempt
+after
+.I timeout
+seconds. Default: 26.
+.SH "LOOPBACK ADDRESSES"
+IPv4 and IPv6 have a significant different
+understanding of loopback addresses:
+.IP
+127./8
+.P
+.IP
+::1/128
+.P
+this is the host-scoped loopback-address, while
+.P
+.IP
+fe80::1%lo0
+.P
+is the link-scoped looback-address and
+.I lo0
+is the name of the loopback interface.
+.SH "DNS RESOLVER SETTINGS"
+Use \fI$DNSCACHEIP\fR to set the DNS resolver's IP(s) dynamically
+irrespectively from the settings in
+.IR /etc/resolv.conf .
+The individual IPs are separated by blanks; IPv6 LLU
+addresses may be appended with the interface name following a '%' sign.
+If the environment variable \fI$LOCALDOMAIN\fR is populated,
+this name will be appended to unqualified host names.
+Additional rewriting of local to public names is facilitated
+in case the file
+.I /etc/dnsrewritefile
+exists and is populated, or alternatively, the environment
+variable \fI$DNSREWRITEFILE\fR points to a different file.
+.SH "ENVIRONMENT VARIABLES SET"
+.B tcpserver
+provides the following environment variables:
+
+.I PROTO
+this is either TCP or TCP6.
+
+The interface name for IPv6 connections:
+.IR TCP6INTERFACE .
+
+The local information:
+.IR TCPLOCALIP ,
+.IR TCP6LOCLAIP ,
+.IR TCPLOCALPORT ,
+.IR TCP6LOCALPORT,
+.IR TCPLOCALHOST,
+.IR TCP6LOCALHOST .
+
+The IP address of connection:
+.I TCPREMOTEIP 
+and
+.IR TCP6REMOTEIP .
+
+The remote port number:
+.IR TCPREMOTEPORT ,
+.IR TCP6REMOTEPORT .
+
+The hostname (FQDN) of the peer, if available:
+.IR TCPREMOTEHOST ,
+.IR TCP6REMOTEHOST .
+
+In case of a successfull IDENT lookup:
+.IR TCPREMOTEINFO .
+.SH LOGGING
+Invoking
+.B tcpserver
+with the option
+.I -v
+will provide a logging of the session including 
+local and remote IP addresses and port. 
+In case the option
+.I -h
+is given, the remote hostname is displayed, if available.
+.SH "SEE ALSO"
+argv0(1),
+fixcr(1),
+recordio(1),
+tcpclient(1),
+tcprules(1),
+listen(2),
+tcp-environ(5)

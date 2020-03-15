@@ -1,0 +1,3 @@
+cc -O2 -g -Wall -I`head -1 ../conf-qlibs`/include 
+
+This will be used to compile .c files.
