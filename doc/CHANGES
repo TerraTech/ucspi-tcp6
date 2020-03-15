@@ -265,6 +265,9 @@
 20190408 (feh)
 	Refactored ip6_bit.c annd ip4_bit.c + depend routines. CIDR now working again.
 	ucspi-tcp6-1.10.5
+20190608 (feh)
+	Added fehQlibs-12 compatibility. 
+	ucspi-tcp6-1.10.6
 
 ucspi-tcp6 -- version: 1.10 post-beta.
 

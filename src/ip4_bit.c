@@ -11,6 +11,7 @@
 #include "ip_bit.h"
 
 #define BITSUBSTITUTION
+#define STRETCH 2
 
 char strnum[FMT_ULONG];
 
@@ -33,7 +34,7 @@ int ip4_bitstring(stralloc *ip4string, char *ip, unsigned int prefix)
   const char *letterarray = "abcdefghijklmnopqrstuvwxyz123456";
 #endif
 
-  if (ip4_cscan(ip,ip4) * 2.5 > prefix) return 1; /* a rough guess for the prefix length */
+  if (ip4_cscan(ip,ip4) * STRETCH > prefix) return 1; /* a rough guess for the prefix length */
   if (!stralloc_copys(ip4string,"")) return -1;
   if (!stralloc_readyplus(ip4string,32)) return -1;
 

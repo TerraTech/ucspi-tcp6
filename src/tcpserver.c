@@ -166,7 +166,7 @@ void doit(int t)
   }
 
   if (!localhost)
-    if (dns_name(&localhostsa,localip) == 0)
+    if (dns_name(&localhostsa,localip) != -1)
       if (localhostsa.len) {
         if (!stralloc_0(&localhostsa)) drop_nomem();
         localhost = localhostsa.s;
@@ -175,16 +175,16 @@ void doit(int t)
   remoteportstr[fmt_ulong(remoteportstr,remoteport)] = 0;
 
   if (flagremotehost)
-    if (dns_name(&remotehostsa,remoteip) == 0)
+    if (dns_name(&remotehostsa,remoteip) != -1)
       if (remotehostsa.len) {
         if (flagparanoid) {
-          if (dns_ip6(&tmp,&remotehostsa) == 0)
+          if (dns_ip6(&tmp,&remotehostsa) != -1)
             for (j = 0; j + 16 <= tmp.len; j += 16)
               if (byte_equal(remoteip,16,tmp.s + j)) {
                 flagparanoid = 0;
                 break;
               }
-            if (dns_ip4(&tmp,&remotehostsa) == 0)
+            if (dns_ip4(&tmp,&remotehostsa) != -1)
               for (j = 0; j + 4 <= tmp.len; j += 4)
                 if (byte_equal(remoteip,4,tmp.s + j)) {
                   flagparanoid = 0;

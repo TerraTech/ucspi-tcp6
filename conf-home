@@ -1,4 +1,4 @@
 /usr/local
 
 This is the ucspi-tcp6 home directory. Programs will be installed in
-.../bin.
+.../bin. Make sure you add it to one of package/command-{cp,ln}, too!

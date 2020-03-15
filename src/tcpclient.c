@@ -210,7 +210,7 @@ int main(int argc,char **argv)
 
   x = forcelocal;
   if (!x)
-    if (dns_name6(&tmp,iplocal) == 0) {
+    if (dns_name6(&tmp,iplocal) != -1) {
       if (!stralloc_0(&tmp)) nomem();
       x = tmp.s;
     }
@@ -231,7 +231,7 @@ int main(int argc,char **argv)
 
   x = 0;
   if (flagremotehost)
-    if (dns_name6(&tmp,ipremote) == 0) {
+    if (dns_name6(&tmp,ipremote) != -1) {
       if (!stralloc_0(&tmp)) nomem();
       x = tmp.s;
     }
