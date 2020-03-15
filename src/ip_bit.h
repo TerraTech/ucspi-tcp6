@@ -3,12 +3,13 @@
 
 #include "stralloc.h"
 
-extern int getaddressasbit(char *, int, stralloc *);
-extern int getbitasaddress(stralloc *);
+extern int bitstring_ip4(stralloc *,stralloc *);
+extern int ip4_bitstring(stralloc *,char *,unsigned int);
+extern unsigned int ip4_cscan(const char *,char [4]);
 extern void getnum(char *,int,unsigned long *);
 
-extern int ip6tobitstring(char *, stralloc *, unsigned int);
-extern int bitstringtoip6(stralloc *, stralloc *);
-extern unsigned int ip6_expandaddr(char *, stralloc *);
+extern int bitstring_ip6(stralloc *,stralloc *);
+extern int ip6_bitstring(stralloc *,char *,unsigned int);
+extern unsigned int ip6_fmt_str(stralloc *,char *);
 
 #endif

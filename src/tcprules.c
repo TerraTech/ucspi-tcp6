@@ -14,7 +14,7 @@
 
 #define WHO "tcprules"
 
-extern int rename(const char *, const char *); /* declared in stdio, ugh */
+extern int rename(const char *,const char *); /* declared in stdio, ugh */
 
 unsigned long linenum = 0;
 char *fntemp;
@@ -88,7 +88,7 @@ void doaddressdata(void) {
   unsigned long bot;
   unsigned long top;
   unsigned long prefix;
-  stralloc expandedip6address = {0};
+  stralloc ip6address = {0};
 
   if (byte_chr(address.s,address.len,'=') < address.len) goto CDB;
   if (byte_chr(address.s,address.len,':') < address.len) ipv6 = 1;
@@ -102,8 +102,8 @@ void doaddressdata(void) {
       if (!stralloc_cats(&key,"@")) nomem();
       if (!stralloc_copyb(&ipstring,address.s+i+1,address.len-i-1)) nomem();
       if (!stralloc_0(&ipstring)) nomem();
-      if (ip6_expandaddr(ipstring.s,&expandedip6address) == 1) {
-        if (!stralloc_catb(&key,expandedip6address.s,expandedip6address.len)) nomem();
+      if (!ip6_fmt_str(&ip6address,ipstring.s)) {
+        if (!stralloc_catb(&key,ip6address.s,ip6address.len)) nomem();
         if (cdb_make_add(&c,key.s,key.len,data.s,data.len) == -1) die_write();
         return;
       }
@@ -118,13 +118,15 @@ void doaddressdata(void) {
       i = byte_chr(address.s,address.len,'/');
       getnum(address.s + i + 1,address.len - i - 1,&prefix);
       if (prefix > 32 || prefix <= 0) die_length();
-      switch (getaddressasbit(address.s,prefix,&ipstring)) {
+      address.s[i] = '\0';
+
+      switch (ip4_bitstring(&ipstring,address.s,prefix)) {
         case -1: nomem();
         case  0: if (!stralloc_copys(&key,"_")) nomem();
                  if (!stralloc_cat(&key,&ipstring)) nomem();
                  if (cdb_make_add(&c,key.s,key.len,data.s,data.len) == -1) die_write();
                  break;
-        case  2: die_ip4c();
+        case  1: die_ip4c();
       }
       return;
     }
@@ -154,25 +156,25 @@ void doaddressdata(void) {
       i = byte_chr(address.s,address.len,'/');
       getnum(address.s + i + 1,address.len - i - 1,&prefix);
       if (prefix > 128 ) die_length();
-      switch (ip6tobitstring(address.s,&ipstring,prefix)) {
+      switch (ip6_bitstring(&ipstring,address.s,prefix)) {
         case -1: nomem();
-        case  1: if (!stralloc_copys(&key,"^")) nomem();
+        case  0: if (!stralloc_copys(&key,"^")) nomem();
                  if (!stralloc_cat(&key,&ipstring)) nomem();
                  if (cdb_make_add(&c,key.s,key.len,data.s,data.len) == -1) die_write();
                  break;
-        case  0: die_ip6c();
+        case  1: die_ip6c();
       }
       return;
     }
     else {
       if (!stralloc_copyb(&ipstring,address.s,address.len)) nomem();
       if (!stralloc_0(&ipstring)) nomem();
-      switch (ip6_expandaddr(ipstring.s,&expandedip6address)) {
+      switch (ip6_fmt_str(&ip6address,ipstring.s)) {
         case -1: nomem();
-        case  0: die_ip6();
-        case  1: if (cdb_make_add(&c,expandedip6address.s,expandedip6address.len,data.s,data.len) == -1)
+        case  0: if (cdb_make_add(&c,ip6address.s,ip6address.len,data.s,data.len) == -1)
                    die_write();
                  break;
+        case  1: die_ip6();
       }
       return;
     }
@@ -223,6 +225,7 @@ int main(int argc,char **argv) {
   
     i = byte_chr(x,len,',');		/* environment variables start */
     colon = byte_rchr(x,i,':');
+
     if (colon == len) continue;
 
     if (!stralloc_copyb(&address,x,colon)) nomem();

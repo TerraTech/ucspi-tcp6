@@ -8,25 +8,28 @@
 #include "exit.h"
 #include "open.h"
 #include "ip_bit.h"
+#include "str.h"
 
 #define WHO "tcprulescheck"
 
 void found(char *data,unsigned int datalen)
 {
   unsigned int next0;
-  stralloc ip6address = {0};
+  stralloc ipaddress = {0};
   
   buffer_puts(buffer_1,"rule ");
 
-  if (byte_chr(rules_name.s,rules_name.len,'^') < rules_name.len) {		/* IPv6 CIDR */
-    if (bitstringtoip6(&rules_name,&ip6address) == 1)
-      stralloc_copys(&rules_name,ip6address.s);
+  if (rules_name.s[0] == '^') {		/* IPv6 CIDR */
+    if (!bitstring_ip6(&ipaddress,&rules_name))
+      stralloc_copys(&rules_name,ipaddress.s);
     else
       logmsg(WHO,101,SYNTAX,"IPv6 address error!");
   }
 
-  if (byte_chr(rules_name.s,rules_name.len,'_') < rules_name.len) {		/* IPv4 CIDR */
-    if (getbitasaddress(&rules_name) == -1) 
+  if (rules_name.s[0] == '_') {		/* IPv4 CIDR */
+    if (!bitstring_ip4(&ipaddress,&rules_name)) 
+      stralloc_copys(&rules_name,ipaddress.s);
+    else
       logmsg(WHO,101,SYNTAX,"IPv4 address error!");
   } 
 

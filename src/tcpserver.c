@@ -423,6 +423,8 @@ int main(int argc,char **argv)
     logmsg(WHO,111,FATAL,"unable to listen");
   ndelay_off(s);
 
+  /* Swap user and permissions */
+
   if (gid) if (prot_gid(gid) == -1)
     logmsg(WHO,111,FATAL,"unable to set gid");
   if (uid) if (prot_uid(uid) == -1)

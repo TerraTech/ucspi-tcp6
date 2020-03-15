@@ -262,6 +262,9 @@
 20190404 (feh)
 	Fixed integration bug in tcpserver changing 'uid' too early (tx. Steve Meier).
 	ucspi-tcp6-1.10.4
+20190408 (feh)
+	Refactored ip6_bit.c annd ip4_bit.c + depend routines. CIDR now working again.
+	ucspi-tcp6-1.10.5
 
 ucspi-tcp6 -- version: 1.10 post-beta.
 

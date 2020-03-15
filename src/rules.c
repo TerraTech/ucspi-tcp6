@@ -15,7 +15,7 @@ stralloc ipstring = {0};
 
 static struct cdb c;
 
-static int dorule(void (*callback)(char *, unsigned int)) {
+static int dorule(void (*callback)(char *,unsigned int)) {
   char *data;
   unsigned int datalen;
 
@@ -37,7 +37,7 @@ static int dorule(void (*callback)(char *, unsigned int)) {
   return 1;
 }
 
-static int doit(void (*callback)(char *, unsigned int), char *ip, char *host, char *info) {
+static int doit(void (*callback)(char *,unsigned int),char *ip,char *host,char *info) {
   int p;
   int r;
   int ipv6 = str_len(ip) - byte_chr(ip,str_len(ip),':');
@@ -46,7 +46,7 @@ static int doit(void (*callback)(char *, unsigned int), char *ip, char *host, ch
     if (!stralloc_copys(&rules_name,info)) return -1;
     if (!stralloc_cats(&rules_name,"@")) return -1;
     if (ipv6) {
-      if (ip6_expandaddr(ip,&ipstring) == 1)
+      if (!ip6_fmt_str(&ipstring,ip))
         if (!stralloc_catb(&rules_name,ipstring.s,ipstring.len)) return -1;
     }
     else
@@ -64,7 +64,7 @@ static int doit(void (*callback)(char *, unsigned int), char *ip, char *host, ch
   }
 
   if (ipv6) {							/* 3. IPv6/IPv4 */
-    if (ip6_expandaddr(ip,&ipstring) == 1) {		
+    if (!ip6_fmt_str(&ipstring,ip)) {		
         if (!stralloc_copyb(&rules_name,ipstring.s,ipstring.len)) return -1;
         r = dorule(callback);
         if (r) return r;
@@ -94,20 +94,21 @@ static int doit(void (*callback)(char *, unsigned int), char *ip, char *host, ch
   }
 
   if (ipv6) {							/* 6. IPv6/IPv4 CIDR */
-    if (ip6tobitstring(rules_name.s,&ipstring,128) == 1) {
+    if (!ip6_bitstring(&ipstring,ip,128)) {
       for (p = 129; p > 1; p--) {
         if (!stralloc_copys(&rules_name,"^")) return -1;
         if (!stralloc_catb(&rules_name,ipstring.s,p)) return -1;
+        if (!stralloc_0(&rules_name)) return -1;
         r = dorule(callback);
         if (r) return r;
       }
     }
   } else {
-    if (!stralloc_copys(&rules_name,ip)) return -1;		
-    if (getaddressasbit(ip,32,&ipstring) != -1) {	
+    if (!ip4_bitstring(&ipstring,ip,32)) {	
       for (p = 33; p > 1; p--) {
         if (!stralloc_copys(&rules_name,"_")) return -1;
         if (!stralloc_catb(&rules_name,ipstring.s,p)) return -1;
+        if (!stralloc_0(&rules_name)) return -1;
         r = dorule(callback);
         if (r) return r;
       }

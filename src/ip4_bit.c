@@ -1,7 +1,7 @@
 /***
   @file ip4_bit.c
   @author Jens Wehrenbrecht, feh
-  @funcs getaddressasbit, getbitsasaddress
+  @funcs ip4_bitstring, bitstring_ip4, ip4_cscan
 */
 #include "ip.h"
 #include "byte.h"
@@ -15,10 +15,15 @@
 char strnum[FMT_ULONG];
 
 /***
-  /fn getaddressasbit
+  /fn ip4_bitstring
+  /brief This function converts a IPv4 address into its binary representation with given prefix len
+  /param out: ip4string    0-terminated destination address.
+  /param in:  ip4address   The source address.
+  /param in:  prefix       The net prefix bits (maximum 32 bits for IPv4).
+  /return -1: lack of memory;  1: non valid IPv6 address; 0: successful converted.
 */
 
-int getaddressasbit(char *ip,int prefix,stralloc *ip4string)
+int ip4_bitstring(stralloc *ip4string, char *ip, unsigned int prefix)
 {
   int i, j;
   char ip4[4];
@@ -27,8 +32,8 @@ int getaddressasbit(char *ip,int prefix,stralloc *ip4string)
 #ifdef BITSUBSTITUTION
   const char *letterarray = "abcdefghijklmnopqrstuvwxyz123456";
 #endif
-  
-  if (!ip4_scan(ip,ip4)) return -1;
+
+  if (ip4_cscan(ip,ip4) * 2.5 > prefix) return 1; /* a rough guess for the prefix length */
   if (!stralloc_copys(ip4string,"")) return -1;
   if (!stralloc_readyplus(ip4string,32)) return -1;
 
@@ -58,38 +63,61 @@ int getaddressasbit(char *ip,int prefix,stralloc *ip4string)
 }
 
 /***
-  /fn getbitsasaddress
+  /fn bitstring_ip4
+  /brief This function takes an IPv4 bitstring and translates it to an IPv4 address + prefix
+  /param in:  ip4string    The source address  (with '_' start token).
+  /param out: ip4addr      0-terminated estination IPv4 address + net prefix (eg. 127.0.0.0/16).
+  /return -1: lack of memory;  1: non valid IPv4 address; 0: successful converted.
 */
 
-int getbitasaddress(stralloc *ip4string)
+int bitstring_ip4(stralloc *ip4addr, stralloc *ip4string)
 {
-  stralloc ipaddr = {0};
-  stralloc buffer = {0};
-  int iplen;
+  int j;
   int num = 0;
   int value = 256;
   int prefix = ip4string->len - 1;
   
-  if (!stralloc_copys(&buffer,"")) return -1;
-  if (!stralloc_copys(&ipaddr,"")) return -1;
-  
-  for (iplen = 1; iplen <= prefix; iplen++) {
-    if (!stralloc_copyb(&buffer,ip4string->s + iplen,1)) return -1;
-    if (byte_diff(buffer.s,1,'0') != 0) 
+  if (prefix <= 1 || prefix > 32) return 1;
+
+  for (j = 1; j <= prefix; j++) {
+    if (ip4string->s[j] != '0')
       { num += (value/2); value /= 2; }
     else 
       { value /= 2; }
-    if (iplen % 8 == 0 || iplen == prefix) {
-      if (!stralloc_catb(&ipaddr,strnum,fmt_ulong(strnum,num))) return -1;
-      if (iplen < 32) if (!stralloc_cats(&ipaddr,".")) return -1;
+    if (j % 8 == 0 ) {
+      if (!stralloc_catb(ip4addr,strnum,fmt_ulong(strnum,num))) return -1;
+      if (j < 32) if (!stralloc_cats(ip4addr,".")) return -1;
       num = 0;
       value = 256;
     }
   }
-  
-  if (!stralloc_copy(ip4string,&ipaddr)) return -1;
-  if (!stralloc_cats(ip4string,"/")) return -1;
-  if (!stralloc_catb(ip4string,strnum,fmt_ulong(strnum,prefix))) return -1;
+
+  if (!stralloc_cats(ip4addr,"/")) return -1;
+  if (!stralloc_catb(ip4addr,strnum,fmt_ulong(strnum,prefix))) return -1;
+  if (!stralloc_0(ip4addr)) return -1;
 
   return 0;
+}
+
+/* ip4_cscan
+   complementary to ip4_scan; but returns the number of decimals read 
+*/
+
+unsigned int ip4_cscan(const char *s,char ip[4])
+{
+  unsigned int i;
+  unsigned int len;
+  unsigned long u;
+  unsigned int n = 0;
+
+  byte_zero(ip,4);
+  len = 0;
+  i = scan_ulong((char *)s,&u); if (!i) { return n; } ip[0] = u; s += i; len += i; n += i;
+  if (*s != '.') { return n; } ++s; ++len;
+  i = scan_ulong((char *)s,&u); if (!i) { return n; } ip[1] = u; s += i; len += i; n += i;
+  if (*s != '.') { return n; } ++s; ++len;
+  i = scan_ulong((char *)s,&u); if (!i) { return n; } ip[2] = u; s += i; len += i; n += i;
+  if (*s != '.') { return n; } ++s; ++len;
+  i = scan_ulong((char *)s,&u); if (!i) { return n; } ip[3] = u; s += i; len += i; n += i;
+  return n;
 }
