@@ -12,28 +12,24 @@
 
 #define WHO "tcprulescheck"
 
-void found(char *data,unsigned int datalen)
+void found(char *data, unsigned int datalen)
 {
   unsigned int next0;
   stralloc ipaddress = {0};
-  
-  buffer_puts(buffer_1,"rule ");
 
-  if (rules_name.s[0] == '^') {		/* IPv6 CIDR */
-    if (!bitstring_ip6(&ipaddress,&rules_name))
+  if (rules_name.s[0] == '^') 		/* IPv6 CIDR */
+    if (!bitstring_ip6(&ipaddress,&rules_name)) 
       stralloc_copys(&rules_name,ipaddress.s);
-    else
-      logmsg(WHO,101,SYNTAX,"IPv6 address error!");
-  }
 
-  if (rules_name.s[0] == '_') {		/* IPv4 CIDR */
+  if (rules_name.s[0] == '_') 		/* IPv4 CIDR */
     if (!bitstring_ip4(&ipaddress,&rules_name)) 
       stralloc_copys(&rules_name,ipaddress.s);
-    else
-      logmsg(WHO,101,SYNTAX,"IPv4 address error!");
-  } 
 
-  buffer_put(buffer_1,rules_name.s,rules_name.len);
+  if (rules_name.len) {
+    buffer_puts(buffer_1,"rule ");
+    buffer_put(buffer_1,rules_name.s,rules_name.len);
+  } else 
+    buffer_puts(buffer_1,"default");
   buffer_puts(buffer_1,":\n");
   while ((next0 = byte_chr(data,datalen,0)) < datalen) {
     switch(data[0]) {
@@ -55,7 +51,7 @@ void found(char *data,unsigned int datalen)
   _exit(0);
 }
 
-int main(int argc,char **argv)
+int main(int argc, char **argv)
 {
   char *fnrules;
   int fd;
@@ -69,7 +65,7 @@ int main(int argc,char **argv)
   }
 
   ip = env_get("TCPREMOTEIP");
-  if (!ip) ip = "::"; 
+  if (!ip) ip = "0"; 
   info = env_get("TCPREMOTEINFO");
   host = env_get("TCPREMOTEHOST");
 

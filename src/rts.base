@@ -1,17 +1,18 @@
 # Assumptions:
-# We're not running with uid 0 or 1. -- test removed
-# We're not running with gid 0 or 2. -- test removed
-# The DNS cache translates ::1 <-> localhost.
+# The DNS cache translates 127.0.0.1 <-> ipv4-loopback 
+# The DNS cache translates ::1 <-> ipv6-loopback 
 # There is no listener for TCP port 16.
 # There is no listener for TCP port 50016.
-# There is no use of TCP ports 50017, 50018, 50019, 50020.
-# RBL is spamhaus tests removed
+# There is no use of TCP ports 50017, 50018, 50019, 50020, 50021, 50022
+# Relay Blacklist 'spamhaus.org' is reachable
 RBL="sbl.spamhaus.org"
 
 rm -rf rts-tmp
 mkdir rts-tmp
 cd rts-tmp
 
+
+## display tcpserver/tcpclient environment variables
 
 echo '#!/bin/sh
 #  trap "" 13
@@ -24,98 +25,106 @@ echo '#!/bin/sh
   echo TCPREMOTEPORT="${TCPREMOTEPORT-unset}"
   echo TCPREMOTEINFO="${TCPREMOTEINFO-unset}"
   echo TCP6INTERFACE="${TCP6INTERFACE-unset}"
+  echo TCP6LOCALIP="${TCP6LOCALIP-unset}"
+  echo TCP6LOCALPORT="${TCP6LOCALPORT-unset}"
+  echo TCP6REMOTEIP="${TCP6REMOTEIP-unset}"
+  echo TCP6REMOTEPORT="${TCP6REMOTEPORT-unset}"
 ' > print
 chmod 755 print
 
+
+echo "---> test tcpserver + tcpclient: one instance of tcpserver (port 50016) is used"
+echo "++++"
+
 exec tcpserver  \
 -c 2 -Bbanner -vo -D -1 -Xx rules.cdb -Rt5 -hp -l Local -b 2 \
-::1 50016 ./print > log.50016 2>&1 & pid_50016=$!
+:0 50016 ./print > log.50016 2>&1 & pid_50016=$!
 
 
 echo '--- tcpclient prints usage message without enough arguments'
-tcpclient 0 0; echo $?
+tcpclient ::1  0; echo $?
 
 echo '--- tcpclient prints error message with unknown port name'
-tcpclient 0 nonexistentport echo wrong; echo $?
+tcpclient ::1  nonexistentport echo wrong; echo $?
 
-echo '--- tcpclient prints error message when connection fails'
-tcpclient 0 016 echo wrong; echo $?
+echo '--- tcpclient prints error message when connection fails (10 second timeout)'
+tcpclient -T 10 ::1  16 echo wrong; echo $?
 
-echo '--- tcpclient -q does not print error message when connection fails'
-tcpclient -q 0 016 echo wrong; echo $?
+echo '--- tcpclient -q does not print error message when connection fails (10 second timeout)'
+tcpclient -T 10 -q ::1 16 echo wrong; echo $?
 
 echo '--- tcpclient prints error message with unknown host name'
-tcpclient nonexistent.local. 016 echo wrong; echo $?
+tcpclient nonexistent.local. 16 echo wrong; echo $?
 
 echo '--- tcpclient prints error message with unresolvable host name'
-tcpclient thislabelistoolongbecausednshasalimitof63charactersinasinglelabel. 016 echo wrong; echo $?
-
-## tcpserver (-6) tests
+tcpclient thislabelistoolongbecausednshasalimitof63charactersinasinglelabel. 16 echo wrong; echo $?
 
 echo '--- tcpserver prints usage message without enough arguments'
-tcpserver -v ::1 0; echo $?
+tcpserver -v :0 0; echo $?
 
 echo '--- tcpserver prints error message with unknown port name'
-tcpserver -v ::1 nonexistentport echo wrong; echo $?
+tcpserver -v :0 nonexistentport echo wrong; echo $?
 
 echo '--- tcpserver prints error message with unknown host name'
-tcpserver -v nonexistent.local. 016 echo wrong; echo $?
+tcpserver -v nonexistent.local. 16 echo wrong; echo $?
 
 echo '--- tcpserver prints error message with unresolvable host name'
-tcpserver -v thislabelistoolongbecausednshasalimitof63charactersinasinglelabel. 016 echo wrong; echo $?
-
-## tcpserver  (-4) tests
+tcpserver -v thislabelistoolongbecausednshasalimitof63charactersinasinglelabel. 16 echo wrong; echo $?
 
 echo '--- tcpserver prints error message with non-local host name'
-tcpserver -v 1.2.3.4 016 echo wrong; echo $?
+tcpserver -v 1.2.3.4 16 echo wrong; echo $?
 
 echo '--- tcpserver sets basic environment variables' 
-tcpclient -p 50017 -R -H -T 10 -l Local -6 0 50016 sh -c 'cat <&6'
+tcpclient -p 50017 -R -H -T 10 -l Local ::1 50016 sh -c 'cat <&6'
 echo $?
 
-echo '--- tcpclient recognizes -D, -i, -r, -h, -t'
-tcpclient -Di ::1 -p 50018 -hrt1 -l Local \
-::1 50016 sh -c 'cat <&6'
+echo '--- tcpclient recognizes -D, -i, -R, -h, -t'
+tcpclient -Di ::1 -p 50018 -hrt1 -l Local ::1 50016 sh -c 'cat <&6'
 echo $?
 
 echo '--- tcpclient sets basic environment variables' 
-tcpclient -p 50019 -R -H -l Local -6 0 50016 ./print
+tcpclient -p 50019 -R -H -l Local ::1 50016 ./print
 echo $?
 
 echo '--- tcpclient looks up host names properly'
-tcpclient -p 50020 -R -l Local -6 0 50016 sh ./print
+tcpclient -p 50020 -R -l Local ::1 50016 ./print
 echo $?
 
 echo '--- tcpclient -v works' 
-tcpclient -v -R -H -l Local -6 0 50016 echo ok
+tcpclient -p 50021 -v -R -H -l Local ::1 50016 echo ok
 echo $?
 
 echo '--- tcpserver prints error message with used port'
-tcpserver -v -R -H -l Local ::1 50016 echo wrong
+tcpserver -v -R -H -l Local :0 50016 echo wrong
 echo $?
 
+echo "---> tcpclient's wrapper (tcpcat, mconnect)"
+
 echo '--- tcpcat works'
-tcpcat  0 50016 | grep -v TCPREMOTEPORT
+tcpcat 0 50016 | grep -v REMOTEPORT
 echo $?
 
 echo '--- mconnect works'
-mconnect 0 50016 </dev/null | grep -v TCPREMOTEPORT
+mconnect 0 50016 </dev/null | grep -v REMOTEPORT
 echo $?
+
+echo "---> tcprules checks (with tcprulescheck)"
+echo "++++"
 
 echo '--- tcprules prints usage message without enough arguments'
 tcprules test.cdb; echo $?
 
 echo '--- tcprules prints error message if it cannot create tmp'
-echo 2002::/64?deny | tcprules test.cdb /dev/nonexistent/tmp; echo $?
+echo 2002::/64:deny | tcprules test.cdb /dev/nonexistent/tmp; echo $?
 
 echo '--- tcprules prints error message if it cannot move tmp to cdb'
-echo 2002::/64?deny | tcprules /dev/nonexistent/cdb test.tmp; echo $?
+echo 2002::/64:deny | tcprules /dev/nonexistent/cdb test.tmp; echo $?
 
-echo '--- tcprules printes syntax error - to short prefix'
-echo 2002/64?deny | tcprules test.cdb test.tmp; echo $?
+echo '--- tcprules printes syntax error - invalid syntax'
+echo 2002/64:deny | tcprules test.cdb test.tmp; echo $?
 
 echo '--- tcprules creates a cdb file'
-echo 2002::/64?deny | tcprules test.cdb test.tmp; echo $?
+echo 2002::/64:deny | tcprules test.cdb test.tmp; echo $?
 
 echo '--- tcprulescheck sees deny -- and converts bit length'
 env TCPREMOTEIP=2002::1 tcprulescheck test.cdb; echo $?
@@ -124,10 +133,10 @@ echo '--- tcprulescheck does not apply deny to another host'
 env TCPREMOTEIP=2001::1 tcprulescheck test.cdb; echo $?
 
 echo '--- tcprules replaces a cdb file'
-echo 'joe@127.0.0.1?allow,which=/first/
-18.23.0.32?allow,which="second"
-127.0/8?allow,which=+third+
-?allow,which==fourth=' | tcprules test.cdb test.tmp; echo $?
+echo 'joe@127.0.0.1:allow,which=/first/
+18.23.0.32:allow,which="second"
+127.:allow,which=+ipv4-looback net Class A+
+:allow,which==fourth=' | tcprules test.cdb test.tmp; echo $?
 
 echo '--- tcprulescheck finds rule with address and info'
 env TCPREMOTEIP=127.0.0.1 TCPREMOTEINFO=joe tcprulescheck test.cdb; echo $?
@@ -141,8 +150,8 @@ env TCPREMOTEIP=127.0.0.1 TCPREMOTEINFO=bill tcprulescheck test.cdb; echo $?
 echo '--- tcprulescheck finds zero-dot wildcard'
 env TCPREMOTEIP=10.119.75.39 TCPREMOTEINFO=bill tcprulescheck test.cdb; echo $?
 
-echo '--- tcprules handles comments, address ranges, multiple variables'
-echo '127.0-5.?allow,which=/first/,where=/whatever/
+echo '--- tcprules handles comments, address ranges, multiple variables, and commas in here'
+echo '127.0-5.:allow,which=/first/,where=/whatever/,who=/,comma./
 # comment' | tcprules test.cdb test.tmp; echo $?
 env TCPREMOTEIP=127.0.0.1 tcprulescheck test.cdb
 env TCPREMOTEIP=127.1.0.1 tcprulescheck test.cdb
@@ -156,10 +165,17 @@ env TCPREMOTEIP=127.8.0.1 tcprulescheck test.cdb
 env TCPREMOTEIP=127.9.0.1 tcprulescheck test.cdb
 env TCPREMOTEIP=127.10.0.1 tcprulescheck test.cdb
 
+echo '--- tcprules handles IPv4 and IPv6 CIDR addresses'
+echo '127./8:allow,which=+IP4 CIDR+
+2001::/64:allow,which="IPv6 CIDR"
+# comment' | tcprules test.cdb test.tmp; echo $?
+env TCPREMOTEIP=127.1.2.3 tcprulescheck test.cdb
+env TCPREMOTEIP=2001::1 tcprulescheck test.cdb
+
 echo '--- tcprules handles host names'
-echo '=known.edu?allow,which=/known/
-=.abuser.edu?deny
-?allow,which=/anybody/' | tcprules test.cdb test.tmp; echo $?
+echo '=known.edu:allow,which=/known/
+=.abuser.edu:deny
+:allow,which=/anybody/' | tcprules test.cdb test.tmp; echo $?
 env TCPREMOTEIP=1.2.3.4 TCPREMOTEHOST=known.edu tcprulescheck test.cdb
 env TCPREMOTEIP=1.2.3.4 TCPREMOTEHOST=random.edu tcprulescheck test.cdb
 env TCPREMOTEIP=1.2.3.4 TCPREMOTEHOST=abuser.edu tcprulescheck test.cdb
@@ -167,17 +183,17 @@ env TCPREMOTEIP=1.2.3.4 TCPREMOTEHOST=x.abuser.edu tcprulescheck test.cdb
 env TCPREMOTEIP=1.2.3.4 TCPREMOTEHOST=x.y.abuser.edu tcprulescheck test.cdb
 
 echo '--- tcprulescheck searches for rules in the proper order'
-echo 'xyz@86.75.30.9?allow,which=/first/
-xyz@=one.two.three?allow,which=/second/
-86.75.30.9?allow,which=/third/
-=one.two.three?allow,which=/fourth/
-86.75.30.?allow,which=/fifth/
-86.75.?allow,which=/sixth/
-86.?allow,which=/seventh/
-=.two.three?allow,which=/eighth/
-=.three?allow,which=/ninth/
-=?allow,which=/tenth/
-?allow,which=/eleventh/
+echo 'xyz@86.75.30.9:allow,which=/first/
+xyz@=one.two.three:allow,which=/second/
+86.75.30.9:allow,which=/third/
+=one.two.three:allow,which=/fourth/
+86.75.30.:allow,which=/fifth/
+86.75.:allow,which=/sixth/
+86.:allow,which=/seventh/
+=.two.three:allow,which=/eighth/
+=.three:allow,which=/ninth/
+=:allow,which=/tenth/
+:allow,which=/eleventh/
 ' | tcprules test.cdb test.tmp; echo $?
 env TCPREMOTEIP=86.75.30.9 TCPREMOTEHOST=one.two.three TCPREMOTEINFO=xyz tcprulescheck test.cdb
 env TCPREMOTEIP=86.75.30.9 TCPREMOTEINFO=xyz tcprulescheck test.cdb
@@ -207,6 +223,9 @@ env TCPREMOTEIP=96.85.20.10 TCPREMOTEHOST=four tcprulescheck test.cdb
 env TCPREMOTEIP=96.85.20.10 TCPREMOTEINFO=abc tcprulescheck test.cdb
 env TCPREMOTEIP=96.85.20.10 tcprulescheck test.cdb
 
+
+echo "---> helper programs: addcr/delcr + recordio/argv0"
+echo "++++"
 
 echo '--- addcr leaves an empty file alone'
 echo '' | tr -d '\012' | addcr; echo $?
@@ -268,6 +287,9 @@ echo '--- argv0 requires arguments'
 argv0 sh; echo $?
 
 
+echo "---> rblsmtpd (against spamhaus)"
+echo "++++"
+
 echo '--- rblsmtpd does not find 127.0.0.1 on the RBL'
 ( echo help; echo quit ) \
 | ( TCPREMOTEIP=127.0.0.1 rblsmtpd -r $RBL echo ok 2>&1; echo $? ) \
@@ -323,6 +345,9 @@ echo $pid_50016
 kill -TERM $pid_50016
 wait $pid_50016
 
+
+echo "---> tcpserver's log output"
+echo "++++"
 
 echo '--- tcpserver -1v prints proper messages'
 cat log.50016 | sed -e 's/:[0-9]*$/:x/g' | sed -e 's/1:[0-9]*/1:x/' | sed -e 's/ [0-9]* / x /g'  

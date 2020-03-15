@@ -67,12 +67,12 @@ void ip_init(void)
   if (flagip6) { 
     if ((ip6_scan(ip_env,remoteip)) == 0) return;
 
-    for (j = 16; j > 0; j--) {
-      hexval = tohex(remoteip[j - 1] & 15);
+    for (j = 15; j >= 0; j--) {
+      hexval = tohex(remoteip[j] & 0x0f);
       if (!stralloc_catb(&ip_reverse,&hexval,1)) nomem();
       if (!stralloc_cats(&ip_reverse,".")) nomem();
 
-      hexval = tohex(remoteip[j - 1] >> 4);
+      hexval = tohex(remoteip[j] >> 4 & 0x0f);
       if (!stralloc_catb(&ip_reverse,&hexval,1)) nomem();
       if (!stralloc_cats(&ip_reverse,".")) nomem(); 
     }

@@ -27,7 +27,7 @@ static int dorule(void (*callback)(char *,unsigned int)) {
   datalen = cdb_datalen(&c);
   data = alloc(datalen);
   if (!data) return -1;
-  if (cdb_read(&c, data, datalen, cdb_datapos(&c)) == -1) {
+  if (cdb_read(&c,data,datalen,cdb_datapos(&c)) == -1) {
     alloc_free(data);
     return -1;
   }
@@ -37,7 +37,7 @@ static int dorule(void (*callback)(char *,unsigned int)) {
   return 1;
 }
 
-static int doit(void (*callback)(char *,unsigned int),char *ip,char *host,char *info) {
+static int doit(void (*callback)(char *, unsigned int), char *ip, char *host, char *info) {
   int p;
   int r;
   int ipv6 = str_len(ip) - byte_chr(ip,str_len(ip),':');
@@ -98,7 +98,6 @@ static int doit(void (*callback)(char *,unsigned int),char *ip,char *host,char *
       for (p = 129; p > 1; p--) {
         if (!stralloc_copys(&rules_name,"^")) return -1;
         if (!stralloc_catb(&rules_name,ipstring.s,p)) return -1;
-        if (!stralloc_0(&rules_name)) return -1;
         r = dorule(callback);
         if (r) return r;
       }
@@ -108,7 +107,6 @@ static int doit(void (*callback)(char *,unsigned int),char *ip,char *host,char *
       for (p = 33; p > 1; p--) {
         if (!stralloc_copys(&rules_name,"_")) return -1;
         if (!stralloc_catb(&rules_name,ipstring.s,p)) return -1;
-        if (!stralloc_0(&rules_name)) return -1;
         r = dorule(callback);
         if (r) return r;
       }
@@ -134,10 +132,10 @@ static int doit(void (*callback)(char *,unsigned int),char *ip,char *host,char *
   return dorule(callback);
 }
 
-int rules(void (*callback)(char *, unsigned int), int fd, char *ip, char *host, char *info) {
+int rules(void (*callback)(char *,unsigned int), int fd, char *ip, char *host, char *info) {
   int r;
-  cdb_init(&c, fd);
-  r = doit(callback, ip, host, info);
+  cdb_init(&c,fd);
+  r = doit(callback,ip,host,info);
   cdb_free(&c);
   return r;
 }

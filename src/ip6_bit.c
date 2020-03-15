@@ -83,10 +83,7 @@ int ip6_bitstring(stralloc *ip6string, char *ip6addr, unsigned int prefix)
         if (!stralloc_cats(ip6string,"0")) return -1;
 
       prefix--;
-      if (prefix == 0) {
-        if (!stralloc_0(ip6string)) return -1;
-        return 0;
-      }
+      if (prefix == 0) return 0;
     }
   }
 
@@ -112,10 +109,12 @@ int bitstring_ip6(stralloc *ip6addr ,stralloc *ip6string)
   char ip6[16] = {0}; 
   char ip6compact[40] = {0};
 
-  prefix = str_len(ip6string->s) - 1;
+  if (!stralloc_copys(ip6addr,"")) return -1;
+  prefix = ip6string->len - 1;
+
+  if (prefix <= 0) return 1;
   if (prefix <= 1 || prefix > 128) return 1;
 
-  if (!stralloc_copys(ip6addr,"")) return -1;
   if (ip6string->s[0] == '^') j = 1;
 
   for (i = j, j = 0; i <= prefix; i++) {
@@ -174,7 +173,7 @@ unsigned int ip6_fmt_str(stralloc *dest, char *src)
   for (i = 0; i < 16; i++) {
     bytetohex((unsigned char)ip6[i],hexvalue);
     stralloc_catb(dest,hexvalue,2);
-    if (!((i+1)%2) && (i+1)<16) 
+    if (!((i+1) % 2) && (i+1) < 16) 
       if (!stralloc_cats(dest,":")) return -1;      /*Append ':' after every two bytes.*/
   }
   return 0;

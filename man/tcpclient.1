@@ -46,7 +46,13 @@ The server's address is given by
 and
 .IR port .
 .I host
-may be 0, referring to the local machine,
+may be 
+.IR 0 ,
+which is identical to
+.IR 127.0.0.1 , 
+or
+.IR ::1
+referring to the IPv4/IPv6 loopback address,
 a compactified IPv6 address,
 a dotted-decimal IPv4 address,
 or a host name;

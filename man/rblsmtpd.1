@@ -5,7 +5,6 @@ rblsmtpd \- block emails from RBL-listed sites and unwanted sources
 .B rblsmtpd
 .I opts
 .I prog
-
 .SH DESCRIPTION
 .B rblsmtpd 
 works with any SMTP server that can run under
@@ -35,8 +34,7 @@ Meanwhile it prints one line on descriptor 2 to log its activity.
 .B rblsmtpd
 drops the limited SMTP conversation after 60 seconds, 
 even if the client has not quit by then.
-
-.SH RBL LOOKUP OPTIONS
+.SH "RBL LOOKUP OPTIONS"
 .TP
 .B \-t \fIn
 Change the timeout to
@@ -119,8 +117,7 @@ If you want to run your own RBL source or anti-RBL source for
 you can use
 .B rbldns
 from the DNScache (djbdns) package.
-
-.SH SMTP REPLIES 
+.SH "SMTP REPLIES"
 Normally, if 
 .B RBLSMTPD 
 is set,
@@ -158,9 +155,7 @@ If an RBL lookup fails temporarily, assume that the address is listed
 (but use a 451 error code even with -b). If an anti-RBL lookup fails temporarily, 
 assume that the address is not anti-listed (but use a 451 error code even if a 
 subsequent RBL lookup succeeds with -b). Unfortunately, this sometimes delays legitimate emails.
-
-
-.SH INTERROGATION MODE
+.SH "INTERROGATION MODE"
 .B rblsmtpd
 may be used to only query RBLs and to present the results to
 .BR qmail-smtpd
@@ -171,8 +166,7 @@ interrogation mode; the RBL information is written on descriptor 2 and available
 via the environment variable
 .B RBLSMTPD
 for further decisions.
-
-.SH GREETDELEY OPTIONS
+.SH "GREETDELEY OPTIONS"
 Introduce a certain delay in the SMTP connection;
 either before or after the RBL, the anti-RBL lookups respectively,
 depending whether this option is defined before or after the lookups.
@@ -185,8 +179,7 @@ evaluate the environment variable
 .B GREETDELAY
 and potentially delay the call to
 .BR qmail-smtpd .
-
-.SH IPv4/IPv6 INVERSE NIBBLE FORMAT
+.SH "IPv4/IPv6 INVERSE NIBBLE FORMAT"
 .B
 rblsmtpd 
 constructs from the incoming IP address \fITCPREMOTEIP\fR
@@ -204,8 +197,7 @@ recognizes IPv4-mapped IPv6 addresses
 and strips the IPv6 prefix 
 piror to build the IPv4 inverse address
 for the RBL lookup.
-
-.SH SEE ALSO
+.SH "SEE ALSO"
 tcpserver(1),
 tcprules(1),
 tcprulescheck(1),

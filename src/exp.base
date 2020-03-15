@@ -1,56 +1,66 @@
+---> test tcpserver + tcpclient: one instance of tcpserver (port 50016) is used
+++++
 --- tcpclient prints usage message without enough arguments
 tcpclient: usage: tcpclient [ -46hHrRdDqQv ] [ -i iplocal ] [ -p portlocal ] [ -T timeoutconn ] [ -l localname ] [ -t timeoutinfo ] [ -I interface ] host port program
 100
 --- tcpclient prints error message with unknown port name
-tcpclient: fatal: (111) unable to figure out port number for: nonexistentport: no recognized error
+tcpclient: fatal: (111) unable to figure out port number for: nonexistentport
 111
---- tcpclient prints error message when connection fails
-tcpclient: warn: unable to connected to: ::1 port: 16
+--- tcpclient prints error message when connection fails (10 second timeout)
+tcpclient: drop: (-99) unable to connected to: ::1 port: 16
 111
---- tcpclient -q does not print error message when connection fails
+--- tcpclient -q does not print error message when connection fails (10 second timeout)
 111
 --- tcpclient prints error message with unknown host name
-tcpclient: fatal: (111) no IP address for: nonexistent.local.: no recognized error
+tcpclient: fatal: (111) no IP address for: nonexistent.local.
 111
 --- tcpclient prints error message with unresolvable host name
-tcpclient: fatal: (111) temporarily unable to figure out IP address for: thislabelistoolongbecausednshasalimitof63charactersinasinglelabel.: no recognized error
+tcpclient: fatal: (111) no IP address for: thislabelistoolongbecausednshasalimitof63charactersinasinglelabel.
 111
 --- tcpserver prints usage message without enough arguments
 tcpserver: usage: tcpserver [ -46UxXpPhHrRoOdDqQv ] [ -c limit ] [ -x rules.cdb ] [ -B banner ] [ -g gid ] [ -u uid ] [ -b backlog ] [ -l localname ] [ -t timeout ] [ -I interface ] host port program
 100
 --- tcpserver prints error message with unknown port name
-tcpserver: fatal: (111) unable to figure out port number for: nonexistentport: no recognized error
+tcpserver: fatal: (111) unable to figure out port number for: nonexistentport
 111
 --- tcpserver prints error message with unknown host name
-tcpserver: fatal: (111) no IP address for: nonexistent.local.: no recognized error
+tcpserver: fatal: (111) temporarily unable to figure out IP address for: nonexistent.local.
 111
 --- tcpserver prints error message with unresolvable host name
-tcpserver: fatal: (111) temporarily unable to figure out IP address for: thislabelistoolongbecausednshasalimitof63charactersinasinglelabel.: no recognized error
+tcpserver: fatal: (111) no IP address for: thislabelistoolongbecausednshasalimitof63charactersinasinglelabel.
 111
 --- tcpserver prints error message with non-local host name
-tcpserver: fatal: (111) unable to bind: no recognized error
+tcpserver: fatal: (111) unable to bind
 111
 --- tcpserver sets basic environment variables
 bannerPROTO=TCP6
 TCPLOCALHOST=Local
 TCPLOCALIP=::1
 TCPLOCALPORT=50016
-TCPREMOTEHOST=ipv6-localhost
+TCPREMOTEHOST=ipv6-loopback
 TCPREMOTEIP=::1
 TCPREMOTEPORT=50017
 TCPREMOTEINFO=unset
 TCP6INTERFACE=unset
+TCP6LOCALIP=::1
+TCP6LOCALPORT=50016
+TCP6REMOTEIP=::1
+TCP6REMOTEPORT=50017
 0
---- tcpclient recognizes -D, -i, -r, -h, -t
+--- tcpclient recognizes -D, -i, -R, -h, -t
 bannerPROTO=TCP6
 TCPLOCALHOST=Local
 TCPLOCALIP=::1
 TCPLOCALPORT=50016
-TCPREMOTEHOST=ipv6-localhost
+TCPREMOTEHOST=ipv6-loopback
 TCPREMOTEIP=::1
 TCPREMOTEPORT=50018
 TCPREMOTEINFO=unset
 TCP6INTERFACE=unset
+TCP6LOCALIP=::1
+TCP6LOCALPORT=50016
+TCP6REMOTEIP=::1
+TCP6REMOTEPORT=50018
 0
 --- tcpclient sets basic environment variables
 PROTO=TCP6
@@ -62,45 +72,62 @@ TCPREMOTEIP=::1
 TCPREMOTEPORT=50016
 TCPREMOTEINFO=unset
 TCP6INTERFACE=unset
+TCP6LOCALIP=::1
+TCP6LOCALPORT=50019
+TCP6REMOTEIP=::1
+TCP6REMOTEPORT=50016
 0
 --- tcpclient looks up host names properly
 PROTO=TCP6
 TCPLOCALHOST=Local
 TCPLOCALIP=::1
 TCPLOCALPORT=50020
-TCPREMOTEHOST=ipv6-localhost
+TCPREMOTEHOST=ipv6-loopback
 TCPREMOTEIP=::1
 TCPREMOTEPORT=50016
 TCPREMOTEINFO=unset
 TCP6INTERFACE=unset
+TCP6LOCALIP=::1
+TCP6LOCALPORT=50020
+TCP6REMOTEIP=::1
+TCP6REMOTEPORT=50016
 0
 --- tcpclient -v works
 tcpclient: connected to ::1 port 50016
 ok
 0
 --- tcpserver prints error message with used port
-tcpserver: fatal: (111) unable to bind: no recognized error
+tcpserver: fatal: (111) unable to bind
 111
+---> tcpclient's wrapper (tcpcat, mconnect)
 --- tcpcat works
-bannerPROTO=TCP6
+bannerPROTO=TCP
 TCPLOCALHOST=Local
-TCPLOCALIP=::1
+TCPLOCALIP=127.0.0.1
 TCPLOCALPORT=50016
-TCPREMOTEHOST=ipv6-localhost
-TCPREMOTEIP=::1
+TCPREMOTEHOST=ipv4-loopback
+TCPREMOTEIP=127.0.0.1
 TCPREMOTEINFO=unset
 TCP6INTERFACE=unset
+TCP6LOCALIP=127.0.0.1
+TCP6LOCALPORT=50016
+TCP6REMOTEIP=127.0.0.1
 0
 --- mconnect works
-bannerPROTO=TCP6
+bannerPROTO=TCP
 TCPLOCALHOST=Local
-TCPLOCALIP=::1
+TCPLOCALIP=127.0.0.1
 TCPLOCALPORT=50016
-TCPREMOTEHOST=ipv6-localhost
-TCPREMOTEIP=::1
+TCPREMOTEHOST=ipv4-loopback
+TCPREMOTEIP=127.0.0.1
 TCPREMOTEINFO=unset
 TCP6INTERFACE=unset
+TCP6LOCALIP=127.0.0.1
+TCP6LOCALPORT=50016
+TCP6REMOTEIP=127.0.0.1
 0
+---> tcprules checks (with tcprulescheck)
+++++
 --- tcprules prints usage message without enough arguments
 tcprules: usage: tcprules rules.cdb rules.tmp
 100
@@ -110,8 +137,8 @@ tcprules: error: (111) unable to create: /dev/nonexistent/tmp
 --- tcprules prints error message if it cannot move tmp to cdb
 tcprules: error: (111) unable to move test.tmp to: /dev/nonexistent/cdb
 111
---- tcprules printes syntax error - to short prefix
-tcprules: syntax: invalid prefix length on line: 2002/64?deny
+--- tcprules printes syntax error - invalid syntax
+tcprules: syntax: invalid prefix length on line: 2002/64:deny
 101
 --- tcprules creates a cdb file
 0
@@ -136,40 +163,46 @@ set environment variable which=second
 allow connection
 0
 --- tcprulescheck finds one-dot wildcard
-rule 127./8:
-set environment variable which=third
+rule 127.:
+set environment variable which=ipv4-looback net Class A
 allow connection
 0
 --- tcprulescheck finds zero-dot wildcard
-rule :
+default:
 set environment variable which=fourth
 allow connection
 0
---- tcprules handles comments, address ranges, multiple variables
+--- tcprules handles comments, address ranges, multiple variables, and commas in here
 0
 rule 127.0.:
 set environment variable which=first
 set environment variable where=whatever
+set environment variable who=,comma.
 allow connection
 rule 127.1.:
 set environment variable which=first
 set environment variable where=whatever
+set environment variable who=,comma.
 allow connection
 rule 127.2.:
 set environment variable which=first
 set environment variable where=whatever
+set environment variable who=,comma.
 allow connection
 rule 127.3.:
 set environment variable which=first
 set environment variable where=whatever
+set environment variable who=,comma.
 allow connection
 rule 127.4.:
 set environment variable which=first
 set environment variable where=whatever
+set environment variable who=,comma.
 allow connection
 rule 127.5.:
 set environment variable which=first
 set environment variable where=whatever
+set environment variable who=,comma.
 allow connection
 default:
 allow connection
@@ -180,16 +213,24 @@ allow connection
 default:
 allow connection
 default:
+allow connection
+--- tcprules handles IPv4 and IPv6 CIDR addresses
+0
+rule 127./8:
+set environment variable which=IP4 CIDR
+allow connection
+rule 2001::/64:
+set environment variable which=IPv6 CIDR
 allow connection
 --- tcprules handles host names
 0
 rule =known.edu:
 set environment variable which=known
 allow connection
-rule :
+default:
 set environment variable which=anybody
 allow connection
-rule :
+default:
 set environment variable which=anybody
 allow connection
 rule =.abuser.edu:
@@ -273,12 +314,14 @@ allow connection
 rule =:
 set environment variable which=tenth
 allow connection
-rule :
+default:
 set environment variable which=eleventh
 allow connection
-rule :
+default:
 set environment variable which=eleventh
 allow connection
+---> helper programs: addcr/delcr + recordio/argv0
+++++
 --- addcr leaves an empty file alone
 0
 --- addcr leaves a partial final line alone
@@ -339,6 +382,8 @@ zero
 --- argv0 requires arguments
 argv0: usage: argv0 realname program [ arg ... ]
 100
+---> rblsmtpd (against spamhaus)
+++++
 --- rblsmtpd does not find 127.0.0.1 on the RBL
 ok
 0
@@ -383,42 +428,44 @@ ok
 --- rblsmtpd understands -a
 ok
 0
-11697
+20666
+---> tcpserver's log output
+++++
 --- tcpserver -1v prints proper messages
-::1 : 50016
+:: : 50016
 tcpserver: status: 0/2
 tcpserver: status: 1/2
 tcpserver: pid x from ::x
-tcpserver: ok x Local:::1:x ipv6-localhost:::1::x
+tcpserver: ok x Local:::1:x ipv6-loopback:::1::x
 tcpserver: end x status 0
 tcpserver: status: 0/2
 tcpserver: status: 1/2
 tcpserver: pid x from ::x
-tcpserver: ok x Local:::1:x ipv6-localhost:::1::x
+tcpserver: ok x Local:::1:x ipv6-loopback:::1::x
 tcpserver: end x status 0
 tcpserver: status: 0/2
 tcpserver: status: 1/2
 tcpserver: pid x from ::x
+tcpserver: ok x Local:::1:x ipv6-loopback:::1::x
 tcpserver: status: 2/2
-tcpserver: pid x from ::x
-tcpserver: ok x Local:::1:x ipv6-localhost:::1::x
-tcpserver: ok x Local:::1:x ipv6-localhost:::1::x
-tcpserver: end x status 0
+tcpserver: end x status 13
 tcpserver: status: 1/2
+tcpserver: pid x from ::x
+tcpserver: ok x Local:::1:x ipv6-loopback:::1::x
 tcpserver: end x status 13
 tcpserver: status: 0/2
 tcpserver: status: 1/2
 tcpserver: pid x from ::x
-tcpserver: ok x Local:::1:x ipv6-localhost:::1::x
+tcpserver: ok x Local:::1:x ipv6-loopback:::1::x
 tcpserver: end x status 13
 tcpserver: status: 0/2
 tcpserver: status: 1/2
-tcpserver: pid x from ::x
-tcpserver: ok x Local:::1:x ipv6-localhost:::1::x
+tcpserver: pid x from 127.0.0.1
+tcpserver: ok x Local:127.0.0.1:x ipv4-loopback:127.0.0.1::x
 tcpserver: end x status 0
 tcpserver: status: 0/2
 tcpserver: status: 1/2
-tcpserver: pid x from ::x
-tcpserver: ok x Local:::1:x ipv6-localhost:::1::x
+tcpserver: pid x from 127.0.0.1
+tcpserver: ok x Local:127.0.0.1:x ipv4-loopback:127.0.0.1::x
 tcpserver: end x status 0
 tcpserver: status: 0/2

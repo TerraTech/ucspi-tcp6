@@ -9,6 +9,7 @@ doc/CHANGES
 doc/HISTORY
 doc/INSTALL
 doc/LICENSE
+doc/README.rts
 doc/TODO
 man
 man/Makefile

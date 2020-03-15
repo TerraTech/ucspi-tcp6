@@ -28,10 +28,7 @@ Usually, you just install the package with
 
 - package/rts -- after compilation!
 
-Note: 	This test are practically unaltered taken from ucspi-tcp-0.88. 
-	However, they mainly are based on IPv6 tests.
-	Execution takes some time and the results might not be meaningful.
-	This is in particular true for rblsmtpd.
+For more details see README.rts.
 
 The rts tests can also be executed manually:
 
@@ -42,4 +39,4 @@ The displayed results show the behavior of the executables.
 The tests include 'positive' and 'negative' ramifications. 
 
 
-Erwin Hoffmann, January 2019.
+Erwin Hoffmann, July 2019.

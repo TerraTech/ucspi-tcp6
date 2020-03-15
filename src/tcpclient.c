@@ -58,7 +58,8 @@ char *forcelocal = 0;
 char ipremote[16];
 uint16 portremote;
 
-char *hostname;
+const char *hostname;
+const char *loopback = "127.0.0.1";
 static stralloc addresses;
 static stralloc moreaddresses;
 
@@ -114,11 +115,8 @@ int main(int argc,char **argv)
     buffer_2->fd = -1;
 
   hostname = *argv;
-  if (!hostname) usage();
-  if (!hostname[0] || str_equal(hostname,"0")) {
-    if (ipv4socket) hostname = "127.0.0.1";
-    else hostname = "::1";
-  }
+  if (!hostname || str_equal((char *)hostname,"")) usage();
+  if (str_equal((char *)hostname,"0")) hostname = loopback;
 
   x = *++argv;
   if (!x) usage();
@@ -135,22 +133,22 @@ int main(int argc,char **argv)
 
   if (!*++argv) usage();
 
+
   if (ipv4socket) {
-    if (ip4_scan(hostname,ipremote)) { 
-      if (!stralloc_copys(&addresses,"")) nomem();
-      byte_copy(addresses.s,12,V4mappedprefix);
-      byte_copy(addresses.s + 12,4,ipremote);
-    }
-  } else if (ip6_scan(hostname,ipremote)) 
-    if (!stralloc_copyb(&addresses,ipremote,16)) nomem();
+     if (ip4_scan(hostname,ipremote)) {
+       if (!stralloc_copyb(&addresses,(char *)V4mappedprefix,12)) nomem();
+       byte_copy(addresses.s + 12,4,ipremote);
+     }
+  } else if (ip6_scan(hostname,ipremote))
+     if (!stralloc_copyb(&addresses,ipremote,16)) nomem();
 
   if (!addresses.len) {
     if (!stralloc_copys(&tmp,hostname)) nomem();
-    if (dns_ip6_qualify(&addresses,&fqdn,&tmp) == -1)
-      logmsg(WHO,111,FATAL,B("temporarily unable to figure out IP address for: ",hostname));
-    if (addresses.len < 4)
-      logmsg(WHO,111,FATAL,B("no IP address for: ",hostname));
+     if (dns_ip6_qualify(&addresses,&fqdn,&tmp) == -1)
+       logmsg(WHO,111,FATAL,B("unable to figure out IP address for: ",(char *)hostname));
   }
+  if (addresses.len < 16) 
+       logmsg(WHO,111,FATAL,B("no IP address for: ",(char *)hostname));
 
   if (addresses.len == 16) {
      ctimeout[0] += ctimeout[1];
@@ -179,10 +177,10 @@ int main(int argc,char **argv)
         else
           ipstr[ip6_fmt(ipstr,addresses.s + j)] = 0;
       }
-      logmsg(WHO,-99,DROP,B("unable to connected to: ",ipstr," port: ",strnum));
     }
     if (!stralloc_copy(&addresses,&moreaddresses)) nomem();
   }
+  logmsg(WHO,-99,DROP,B("unable to connected to: ",ipstr," port: ",strnum));
 
   _exit(111);
 
@@ -202,10 +200,13 @@ int main(int argc,char **argv)
 
   strnum[fmt_ulong(strnum,portlocal)] = 0;
   if (!pathexec_env("TCPLOCALPORT",strnum)) nomem();
-  if (ipv4socket)
-    ipstr[ip4_fmt(ipstr,iplocal + 12)] = 0;
-  else
+
+  if (!ipv4socket) {
     ipstr[ip6_fmt(ipstr,iplocal)] = 0;
+    if (!pathexec_env("TCP6LOCALIP",ipstr)) nomem();
+    if (!pathexec_env("TCP6LOCALPORT",strnum)) nomem();
+  } else
+    ipstr[ip4_fmt(ipstr,iplocal + 12)] = 0;
   if (!pathexec_env("TCPLOCALIP",ipstr)) nomem();
 
   x = forcelocal;
@@ -221,11 +222,15 @@ int main(int argc,char **argv)
 
   strnum[fmt_ulong(strnum,portremote)] = 0;
   if (!pathexec_env("TCPREMOTEPORT",strnum)) nomem();
-  if (ipv4socket)
-    ipstr[ip4_fmt(ipstr,ipremote + 12)] = 0;
-  else
+
+  if (!ipv4socket) {
     ipstr[ip6_fmt(ipstr,ipremote)] = 0;
+    if (!pathexec_env("TCP6REMOTEIP",ipstr)) nomem();
+    if (!pathexec_env("TCP6REMOTEPORT",strnum)) nomem();
+  } else
+    ipstr[ip4_fmt(ipstr,ipremote + 12)] = 0;
   if (!pathexec_env("TCPREMOTEIP",ipstr)) nomem();
+
   if (verbosity >= 2)
     log(WHO,B("connected to ",ipstr," port ",strnum));
 

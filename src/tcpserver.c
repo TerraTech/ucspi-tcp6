@@ -49,6 +49,7 @@ char localip[16];
 char localipstr[IP6_FMT];
 static stralloc localhostsa;
 char *localhost = 0;
+const char *thishost = "0.0.0.0";
 
 uint16 remoteport;
 char remoteportstr[FMT_ULONG];
@@ -134,12 +135,12 @@ void found(char *data,unsigned int datalen)
 
 void doit(int t)
 {
-  uint32 scope_id;
+  uint32 netif;
   int j;
 
   ipv4socket = ip6_isv4mapped(remoteip);
 
-  if (socket_local(t,localip,&localport,&scope_id) == -1)
+  if (socket_local(t,localip,&localport,&netif) == -1)
     logmsg(WHO,111,FATAL,"unable to get local address");
   if (flagkillopts) 
     socket_ipoptionskill(t);
@@ -244,8 +245,8 @@ void doit(int t)
     env("TCP6LOCALIP",localipstr);
     env("TCP6LOCALHOST",localhost);
     env("TCP6LOCALPORT",localportstr);
-    if (scope_id)
-      env("TCP6INTERFACE",socket_getifname(scope_id));
+    if (netif)
+      env("TCP6INTERFACE",socket_getifname(netif));
   }
   env("TCPREMOTEIP",remoteipstr);
   env("TCPREMOTEPORT",remoteportstr);
@@ -364,12 +365,9 @@ int main(int argc,char **argv)
     buffer_2->fd = -1;
  
   hostname = *argv++;
-  if (!hostname) usage();
-  if (str_equal(hostname,"") || str_equal(hostname,"0")) {
-    if (ipv4socket) hostname = "0.0.0.0";
-    else  hostname = "::";
-  }
-  if (str_equal(hostname,":0")) {
+  if (!hostname || str_equal((char *)hostname,"")) usage();
+  if (str_equal((char *)hostname,"0")) hostname = thishost;
+  else if (str_equal((char *)hostname,":0")) {
     flagdualstack = 1;
     hostname = "::";
   }
@@ -403,10 +401,10 @@ int main(int argc,char **argv)
 
   if (!addresses.len) {
     if (!stralloc_copys(&tmp,hostname)) drop_nomem();
-    if (dns_ip6_qualify(&addresses,&fqdn,&tmp) == -1)
-      logmsg(WHO,111,FATAL,B("temporarily unable to figure out IP address for: ",hostname));
-    if (addresses.len < 4)
-      logmsg(WHO,111,FATAL,B("no IP address for: ",hostname));
+    if (!dns_ip6_qualify(&addresses,&fqdn,&tmp))
+      logmsg(WHO,111,FATAL,B("temporarily unable to figure out IP address for: ",(char *)hostname));
+    if (addresses.len < 16)
+      logmsg(WHO,111,FATAL,B("no IP address for: ",(char *)hostname));
   }
   byte_copy(localip,16,addresses.s);
 

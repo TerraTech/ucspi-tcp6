@@ -268,6 +268,16 @@
 20190608 (feh)
 	Added fehQlibs-12 compatibility. 
 	ucspi-tcp6-1.10.6
+20190623 (feh)
+	Fix for tcprulcescheck abending if environment variable IP is not present.
+	Fix for potential stack corruption calling tcpserver/tcpclient with '0' for hostname.
+	Removed constraints on building IPv4 CIDR rules with tcprules.
+	Cleanups and tweaked package/rts to work well again. Beta-tested by Veera.
+20190714 (feh)
+	Fixed bug in rblsmtpd not calculating the inverse IPv6 address correctly.
+	package/rts usage explained (README.rts) and finally straightend.
+	tcprules and tcprulescheck improved for IPv4/IPv6 CIDR address reporting.
+	ucspi-tcp6-1.10.7
 
-ucspi-tcp6 -- version: 1.10 post-beta.
+ucspi-tcp6 -- version: 1.10. (heritage)
 

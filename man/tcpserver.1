@@ -71,17 +71,26 @@ has to be provided.
 can be instructed to be multi-homing capable while binding
 to all available IP addresses. Now
 .I host
-is given as '0' or '::' perhaps accompanied by the flags
-.I -4
-or
-.IR -6 .
+is given as 
+.I 0.0.0.0  
+or 
+.IR :: .
+.B tcpserver 
+additionally supports legacy binding to 
+.I host 
+as
+.I 0
+which is identical to
+.IR 0.0.0.0 .
 
 Further,
 .B tcpserver
 may be forced to provide dual-stack capabilities, thus allowing
 IPv4 and IPv6 clients to attach to the same instance once
 .I host
-equals ':0' as pseudo IP address.
+equals 
+.I :0 
+as pseudo IP address.
 
 .I port
 may be a numeric port number

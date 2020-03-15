@@ -72,7 +72,7 @@ void die_ip6c(void) {
 char strnum[FMT_ULONG];
 stralloc sanum = {0};
 
-void getnum(char *buf,int len,unsigned long *u) {
+void getnum(char *buf, int len, unsigned long *u) {
   if (!stralloc_copyb(&sanum,buf,len)) nomem();
   if (!stralloc_0(&sanum)) nomem();
   if (sanum.s[scan_ulong(sanum.s,u)]) die_bad();
@@ -100,7 +100,7 @@ void doaddressdata(void) {
       i = byte_chr(address.s,address.len,'@');
       if (!stralloc_copyb(&key,address.s,i)) nomem();
       if (!stralloc_cats(&key,"@")) nomem();
-      if (!stralloc_copyb(&ipstring,address.s+i+1,address.len-i-1)) nomem();
+      if (!stralloc_copyb(&ipstring,address.s + i + 1,address.len - i - 1)) nomem();
       if (!stralloc_0(&ipstring)) nomem();
       if (!ip6_fmt_str(&ip6address,ipstring.s)) {
         if (!stralloc_catb(&key,ip6address.s,ip6address.len)) nomem();
@@ -123,7 +123,7 @@ void doaddressdata(void) {
       switch (ip4_bitstring(&ipstring,address.s,prefix)) {
         case -1: nomem();
         case  0: if (!stralloc_copys(&key,"_")) nomem();
-                 if (!stralloc_cat(&key,&ipstring)) nomem();
+                 if (!stralloc_catb(&key,ipstring.s,ipstring.len)) nomem();
                  if (cdb_make_add(&c,key.s,key.len,data.s,data.len) == -1) die_write();
                  break;
         case  1: die_ip4c();
@@ -159,7 +159,7 @@ void doaddressdata(void) {
       switch (ip6_bitstring(&ipstring,address.s,prefix)) {
         case -1: nomem();
         case  0: if (!stralloc_copys(&key,"^")) nomem();
-                 if (!stralloc_cat(&key,&ipstring)) nomem();
+                 if (!stralloc_catb(&key,ipstring.s,ipstring.len)) nomem();
                  if (cdb_make_add(&c,key.s,key.len,data.s,data.len) == -1) die_write();
                  break;
         case  1: die_ip6c();
