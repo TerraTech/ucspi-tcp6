@@ -296,9 +296,15 @@
 20200213 (feh)
 	Improved stability of rblsmtpd (which might segfault on IPv6 connections).
 	ucspi-tcp6-1.11.2
-20200220 (feh)
+20200221 (feh)
 	Fixed rblsmtpd core dumping due to wrong decrement of IPv6 loop variable. 
+	Straightend error codes and exiting for tcpserver instead of dropping the 
+	session in case of errors.
 	ucspi-tcp6-1.11.3
+  Changed once more rblsmtpd's IPv6/IPv4 treatment of the received environment
+	variables to make it more robust.
+	Fixed wrong IPv4 check for tcpserver's paranoid evalution.
+	ucspi-tcp6-1.11.4
 	
 
 ucspi-tcp6 -- version: 1.11. (final)

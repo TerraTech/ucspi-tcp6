@@ -31,6 +31,7 @@ void usage(void)
 [-W] [-w delay] smtpd [ arg ... ]");
 }
 
+char *tcp_proto;
 char *ip_env = 0;;
 static stralloc ip_reverse;
 int flagip6;
@@ -45,15 +46,20 @@ void ip_init(void)
   flagip6 = 0;
   byte_zero(remoteip,16);
 
-  ip_env = env_get("TCP6REMOTEIP");
-  if (ip_env) { 
-    if (byte_equal(ip_env,7,V4MAPPREFIX)) 
+  tcp_proto = env_get("PROTO");
+  if (!tcp_proto) tcp_proto = "";
+  if (!str_diff(tcp_proto,"TCP6")) {
+    ip_env = env_get("TCP6REMOTEIP");
+    if (!ip_env) ip_env = "::";
+    if (byte_equal(ip_env,7,V4MAPPREFIX))
       ip_env = ip_env + 7;
-    else 
+    else
       flagip6 = 1;
   } else {
     ip_env  = env_get("TCPREMOTEIP");
-    if (!ip_env) ip_env = "";
+    if (!ip_env) ip_env = "0.0.0.0";
+    else if (byte_equal(ip_env,7,V4MAPPREFIX))
+      ip_env = ip_env + 7;
   }
 
   if (!stralloc_copys(&ip_reverse,"")) nomem();

@@ -188,7 +188,7 @@ void doit(int t)
               }
           if (dns_ip4(&tmp,&remotehostsa) >= 0)
             for (j = 0; j + 4 <= tmp.len; j += 4)
-              if (byte_equal(remoteip,4,tmp.s + j)) {
+              if (byte_equal(remoteip + 12,4,tmp.s + j)) {
                 flagparanoid = 0;
                 break;
               }
@@ -478,7 +478,6 @@ int main(int argc,char **argv)
         logmsg(WHO,111,FATAL,B("unable to run: ",*argv));
       case -1:
         logmsg(WHO,111,FATAL,"unable to fork");
-
         --numchildren; printstatus();
     }
     close(t);
